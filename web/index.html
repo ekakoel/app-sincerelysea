@@ -31,6 +31,23 @@
 
   <title>SincerelySea</title>
   <link rel="manifest" href="manifest.json">
+  <script>
+    (function () {
+      var host = (location.hostname || "").split(",")[0].trim().split(":")[0].toLowerCase();
+      if (!host || host.indexOf(".") < 0 || /^\d{1,3}(?:\.\d{1,3}){3}$/.test(host)) return;
+      if (host === "vercel.app" || host.slice(-11) === ".vercel.app" || host === "vercel.com" || host.slice(-11) === ".vercel.com") return;
+      var xBanner = "https://" + host + "/x-banner.jpg";
+      var ogImage = "https://" + host + "/og.jpg";
+      function add(property, content) {
+        var el = document.createElement("meta");
+        el.setAttribute("property", property);
+        el.setAttribute("content", content);
+        document.head.appendChild(el);
+      }
+      add("og:image", ogImage);
+      add("x:game:image", xBanner);
+    })();
+  </script>
 </head>
 <body>
   <!--
