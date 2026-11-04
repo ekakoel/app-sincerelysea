@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
+import '../../core/constants.dart';
 import '../../core/firebase_gate.dart';
 import '../../core/widgets.dart';
 import '../../data/local_store.dart';
@@ -58,6 +59,8 @@ class _LoginPageState extends State<LoginPage> {
             'Preview account: ${LocalAppStore.fixtureEmail} · ${LocalAppStore.fixturePassword}',
             style: Theme.of(context).textTheme.bodySmall,
           ),
+          const SizedBox(height: 8),
+          Text(betaNotice, style: Theme.of(context).textTheme.bodySmall),
           const SizedBox(height: 20),
           AppTextField(
             label: 'Email',

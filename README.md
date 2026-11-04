@@ -28,6 +28,8 @@ Aplikasi klien sudah bisa dijalankan. Firebase, pembayaran, dan build toko belum
 | Pesan antar anggota | Ada di memori, hanya untuk peserta |
 | Aturan Firestore dan Storage | Tertulis, belum diuji di emulator |
 | Cloud Functions | Tertulis, belum di-deploy |
+| Akun tersimpan di perangkat | Ada. Belum tersinkron antarponsel |
+| Kebijakan privasi, syarat, hapus akun | Ada. Lihat [docs/STORE.md](docs/STORE.md) |
 | App Bundle dan IPA | Belum dibuat |
 
 ## Persyaratan

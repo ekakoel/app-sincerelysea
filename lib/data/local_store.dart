@@ -226,13 +226,34 @@ class StoreException implements Exception {
   String toString() => message;
 }
 
+/// Device-local snapshot. This is not a security boundary.
+abstract class SnapshotPersistence {
+  Future<String?> load();
+  void save(String raw);
+}
+
+class MemorySnapshotPersistence implements SnapshotPersistence {
+  String? value;
+
+  @override
+  Future<String?> load() async => value;
+
+  @override
+  void save(String raw) => value = raw;
+}
+
 /// Local adapter used until Firebase credentials are configured.
 /// Passwords are hashed and never written to Firestore.
 /// Administrator access cannot be granted from this client.
 class LocalAppStore extends ChangeNotifier {
-  LocalAppStore({DateTime Function()? clock}) : _clock = clock ?? DateTime.now {
+  LocalAppStore({DateTime Function()? clock, this.persistence})
+    : _clock = clock ?? DateTime.now {
     _seed();
   }
+
+  final SnapshotPersistence? persistence;
+  bool restored = false;
+  bool _persistSuspended = false;
 
   final DateTime Function() _clock;
   final Map<String, AppUser> users = {};
@@ -266,6 +287,38 @@ class LocalAppStore extends ChangeNotifier {
 
   static const fixtureEmail = 'ayu@sincerelysea.dev';
   static const fixturePassword = 'preview-ayu';
+
+  @override
+  void notifyListeners() {
+    super.notifyListeners();
+    final persistence = this.persistence;
+    if (_persistSuspended || persistence == null) return;
+    persistence.save(jsonEncode(toSnapshot()));
+  }
+
+  Future<void> restore() async {
+    final persistence = this.persistence;
+    if (persistence == null) return;
+    final raw = await persistence.load();
+    if (raw == null || raw.trim().isEmpty) return;
+    _persistSuspended = true;
+    try {
+      final decoded = jsonDecode(raw);
+      if (decoded is! Map) {
+        throw const FormatException('Snapshot is not an object.');
+      }
+      applySnapshot(Map<String, Object?>.from(decoded));
+      restored = true;
+    } catch (_) {
+      _clearMutable();
+      _seed();
+      session = null;
+      restored = false;
+    } finally {
+      _persistSuspended = false;
+    }
+    if (restored) notifyListeners();
+  }
 
   void _seed() {
     final ayu = AppUser(
@@ -627,10 +680,22 @@ class LocalAppStore extends ChangeNotifier {
 
   void deleteAccount() {
     final user = _requireSession();
-    users.remove(user.id);
-    posts.removeWhere((post) => post.authorId == user.id);
-    comments.removeWhere((comment) => comment.authorId == user.id);
-    carts.remove(user.id);
+    final id = user.id;
+    users.remove(id);
+    posts.removeWhere((post) => post.authorId == id);
+    comments.removeWhere((comment) => comment.authorId == id);
+    notices.removeWhere((notice) => notice.userId == id);
+    carts.remove(id);
+    likes.removeWhere((key) => key.startsWith('$id|'));
+    saves.removeWhere((key) => key.startsWith('$id|'));
+    wishlist.removeWhere((key) => key.startsWith('$id|'));
+    blocks.removeWhere((key) => key.startsWith('$id|') || key.endsWith('|$id'));
+    conversations.removeWhere(
+      (conversation) => conversation.participantIds.contains(id),
+    );
+    pendingVerificationCode = null;
+    pendingResetCode = null;
+    pendingResetUserId = null;
     session = null;
     notifyListeners();
   }
@@ -1076,5 +1141,485 @@ class LocalAppStore extends ChangeNotifier {
       (post) => post.id == id,
       orElse: () => throw StoreException('Post not found.'),
     );
+  }
+
+  void _clearMutable() {
+    users.clear();
+    posts.clear();
+    comments.clear();
+    orders.clear();
+    ownership.clear();
+    conversations.clear();
+    notices.clear();
+    reports.clear();
+    carts.clear();
+    likes.clear();
+    saves.clear();
+    wishlist.clear();
+    listings.clear();
+    gifts.clear();
+    interests.clear();
+    auditLog.clear();
+    blocks.clear();
+    session = null;
+  }
+
+  Map<String, Object?> toSnapshot() {
+    return {
+      'version': 1,
+      'seq': _seq,
+      'sessionUserId': session?.id,
+      'onboardingComplete': onboardingComplete,
+      'darkMode': darkMode,
+      'pendingVerificationCode': pendingVerificationCode,
+      'pendingResetCode': pendingResetCode,
+      'pendingResetUserId': pendingResetUserId,
+      'users': users.values
+          .map(
+            (user) => {
+              'id': user.id,
+              'email': user.email,
+              'displayName': user.displayName,
+              'username': user.username,
+              'passwordHash': user.passwordHash,
+              'bio': user.bio,
+              'city': user.city,
+              'avatarAsset': user.avatarAsset,
+              'emailVerified': user.emailVerified,
+              'joinedAt': user.joinedAt.toIso8601String(),
+            },
+          )
+          .toList(),
+      'posts': posts
+          .map(
+            (post) => {
+              'id': post.id,
+              'authorId': post.authorId,
+              'imageAsset': post.imageAsset,
+              'caption': post.caption,
+              'city': post.city,
+              'createdAt': post.createdAt.toIso8601String(),
+              'productId': post.productId,
+              'shareCount': post.shareCount,
+            },
+          )
+          .toList(),
+      'comments': comments
+          .map(
+            (comment) => {
+              'id': comment.id,
+              'postId': comment.postId,
+              'authorId': comment.authorId,
+              'body': comment.body,
+              'createdAt': comment.createdAt.toIso8601String(),
+            },
+          )
+          .toList(),
+      'orders': orders
+          .map(
+            (order) => {
+              'id': order.id,
+              'userId': order.userId,
+              'subtotalIdr': order.subtotalIdr,
+              'status': order.status.name,
+              'createdAt': order.createdAt.toIso8601String(),
+              'shipTo': order.shipTo,
+              'lines': order.lines
+                  .map(
+                    (line) => {
+                      'productId': line.productId,
+                      'name': line.name,
+                      'quantity': line.quantity,
+                      'unitPriceIdr': line.unitPriceIdr,
+                    },
+                  )
+                  .toList(),
+            },
+          )
+          .toList(),
+      'ownership': ownership
+          .map(
+            (record) => {
+              'id': record.id,
+              'productId': record.productId,
+              'ownerId': record.ownerId,
+              'source': record.source.name,
+              'status': record.status.name,
+              'since': record.since.toIso8601String(),
+              'orderId': record.orderId,
+            },
+          )
+          .toList(),
+      'conversations': conversations
+          .map(
+            (conversation) => {
+              'id': conversation.id,
+              'participantIds': conversation.participantIds,
+              'messages': conversation.messages
+                  .map(
+                    (message) => {
+                      'id': message.id,
+                      'senderId': message.senderId,
+                      'body': message.body,
+                      'sentAt': message.sentAt.toIso8601String(),
+                      'read': message.read,
+                    },
+                  )
+                  .toList(),
+            },
+          )
+          .toList(),
+      'notices': notices
+          .map(
+            (notice) => {
+              'id': notice.id,
+              'userId': notice.userId,
+              'title': notice.title,
+              'body': notice.body,
+              'createdAt': notice.createdAt.toIso8601String(),
+              'targetType': notice.targetType,
+              'targetId': notice.targetId,
+            },
+          )
+          .toList(),
+      'reports': reports
+          .map(
+            (report) => {
+              'id': report.id,
+              'reporterId': report.reporterId,
+              'targetType': report.targetType,
+              'targetId': report.targetId,
+              'reason': report.reason,
+            },
+          )
+          .toList(),
+      'carts': carts.map(
+        (userId, lines) => MapEntry(
+          userId,
+          lines
+              .map(
+                (line) => {
+                  'productId': line.productId,
+                  'quantity': line.quantity,
+                },
+              )
+              .toList(),
+        ),
+      ),
+      'likes': likes.toList(),
+      'saves': saves.toList(),
+      'wishlist': wishlist.toList(),
+      'blocks': blocks.toList(),
+      'listings': listings
+          .map(
+            (listing) => {
+              'id': listing.id,
+              'ownershipId': listing.ownershipId,
+              'sellerId': listing.sellerId,
+              'productId': listing.productId,
+              'note': listing.note,
+              'status': listing.status,
+            },
+          )
+          .toList(),
+      'gifts': gifts
+          .map(
+            (gift) => {
+              'id': gift.id,
+              'ownershipId': gift.ownershipId,
+              'fromUserId': gift.fromUserId,
+              'toUserId': gift.toUserId,
+              'status': gift.status,
+            },
+          )
+          .toList(),
+      'interests': interests
+          .map(
+            (interest) => {
+              'id': interest.id,
+              'listingId': interest.listingId,
+              'buyerId': interest.buyerId,
+            },
+          )
+          .toList(),
+      'auditLog': auditLog,
+    };
+  }
+
+  void applySnapshot(Map<String, Object?> data) {
+    if (data['version'] != 1) {
+      throw const FormatException('Unsupported snapshot.');
+    }
+    final nextUsers = <String, AppUser>{};
+    for (final item in _mapList(data['users'])) {
+      final user = _userFromMap(item);
+      nextUsers[user.id] = user;
+    }
+    final nextPosts = _mapList(data['posts']).map(_postFromMap).toList();
+    final nextComments = _mapList(data['comments'])
+        .map(_commentFromMap)
+        .toList();
+    final nextOrders = _mapList(data['orders']).map(_orderFromMap).toList();
+    final nextOwnership = _mapList(data['ownership'])
+        .map(_ownershipFromMap)
+        .toList();
+    final nextConversations = _mapList(data['conversations'])
+        .map(_conversationFromMap)
+        .toList();
+    final nextNotices = _mapList(data['notices']).map(_noticeFromMap).toList();
+    final nextReports = _mapList(data['reports']).map(_reportFromMap).toList();
+    final nextListings = _mapList(data['listings'])
+        .map(_listingFromMap)
+        .toList();
+    final nextGifts = _mapList(data['gifts']).map(_giftFromMap).toList();
+    final nextInterests = _mapList(data['interests'])
+        .map(_interestFromMap)
+        .toList();
+    final nextCarts = <String, List<CartRequest>>{};
+    final rawCarts = data['carts'];
+    if (rawCarts is Map) {
+      rawCarts.forEach((key, value) {
+        nextCarts['$key'] = _mapList(value)
+            .map(
+              (line) => CartRequest(
+                productId: _text(line['productId']),
+                quantity: _int(line['quantity']),
+              ),
+            )
+            .toList();
+      });
+    }
+    users
+      ..clear()
+      ..addAll(nextUsers);
+    posts
+      ..clear()
+      ..addAll(nextPosts);
+    comments
+      ..clear()
+      ..addAll(nextComments);
+    orders
+      ..clear()
+      ..addAll(nextOrders);
+    ownership
+      ..clear()
+      ..addAll(nextOwnership);
+    conversations
+      ..clear()
+      ..addAll(nextConversations);
+    notices
+      ..clear()
+      ..addAll(nextNotices);
+    reports
+      ..clear()
+      ..addAll(nextReports);
+    listings
+      ..clear()
+      ..addAll(nextListings);
+    gifts
+      ..clear()
+      ..addAll(nextGifts);
+    interests
+      ..clear()
+      ..addAll(nextInterests);
+    carts
+      ..clear()
+      ..addAll(nextCarts);
+    likes
+      ..clear()
+      ..addAll(_stringSet(data['likes']));
+    saves
+      ..clear()
+      ..addAll(_stringSet(data['saves']));
+    wishlist
+      ..clear()
+      ..addAll(_stringSet(data['wishlist']));
+    blocks
+      ..clear()
+      ..addAll(_stringSet(data['blocks']));
+    auditLog
+      ..clear()
+      ..addAll(_stringSet(data['auditLog']));
+    final seq = data['seq'];
+    if (seq is int && seq > _seq) _seq = seq;
+    final sessionId = data['sessionUserId'];
+    session = sessionId is String ? users[sessionId] : null;
+    onboardingComplete = data['onboardingComplete'] == true;
+    darkMode = data['darkMode'] == true;
+    pendingVerificationCode = data['pendingVerificationCode'] as String?;
+    pendingResetCode = data['pendingResetCode'] as String?;
+    pendingResetUserId = data['pendingResetUserId'] as String?;
+  }
+
+  AppUser _userFromMap(Map<String, Object?> item) {
+    return AppUser(
+      id: _text(item['id']),
+      email: _text(item['email']),
+      displayName: _text(item['displayName']),
+      username: _text(item['username']),
+      passwordHash: _text(item['passwordHash']),
+      bio: _text(item['bio'], fallback: ''),
+      city: _text(item['city'], fallback: 'Denpasar'),
+      avatarAsset: item['avatarAsset'] as String?,
+      emailVerified: item['emailVerified'] == true,
+      adminClaim: false,
+      joinedAt: _time(item['joinedAt']),
+    );
+  }
+
+  CommunityPost _postFromMap(Map<String, Object?> item) {
+    return CommunityPost(
+      id: _text(item['id']),
+      authorId: _text(item['authorId']),
+      imageAsset: _text(item['imageAsset']),
+      caption: _text(item['caption']),
+      city: _text(item['city']),
+      createdAt: _time(item['createdAt']),
+      productId: item['productId'] as String?,
+      shareCount: _int(item['shareCount']),
+    );
+  }
+
+  PostComment _commentFromMap(Map<String, Object?> item) {
+    return PostComment(
+      id: _text(item['id']),
+      postId: _text(item['postId']),
+      authorId: _text(item['authorId']),
+      body: _text(item['body']),
+      createdAt: _time(item['createdAt']),
+    );
+  }
+
+  CustomerOrder _orderFromMap(Map<String, Object?> item) {
+    return CustomerOrder(
+      id: _text(item['id']),
+      userId: _text(item['userId']),
+      lines: _mapList(item['lines'])
+          .map(
+            (line) => QuotedLine(
+              productId: _text(line['productId']),
+              name: _text(line['name']),
+              quantity: _int(line['quantity']),
+              unitPriceIdr: _int(line['unitPriceIdr']),
+            ),
+          )
+          .toList(),
+      subtotalIdr: _int(item['subtotalIdr']),
+      status: OrderStatus.values.byName(_text(item['status'])),
+      createdAt: _time(item['createdAt']),
+      shipTo: _text(item['shipTo']),
+    );
+  }
+
+  OwnershipRecord _ownershipFromMap(Map<String, Object?> item) {
+    return OwnershipRecord(
+      id: _text(item['id']),
+      productId: _text(item['productId']),
+      ownerId: _text(item['ownerId']),
+      source: OwnershipSource.values.byName(_text(item['source'])),
+      status: OwnershipStatus.values.byName(_text(item['status'])),
+      since: _time(item['since']),
+      orderId: item['orderId'] as String?,
+    );
+  }
+
+  Conversation _conversationFromMap(Map<String, Object?> item) {
+    final participants = item['participantIds'];
+    if (participants is! List) {
+      throw const FormatException('Conversation participants are missing.');
+    }
+    return Conversation(
+      id: _text(item['id']),
+      participantIds: participants.map((id) => '$id').toList(),
+      messages: _mapList(item['messages'])
+          .map(
+            (message) => DirectMessage(
+              id: _text(message['id']),
+              senderId: _text(message['senderId']),
+              body: _text(message['body']),
+              sentAt: _time(message['sentAt']),
+              read: message['read'] == true,
+            ),
+          )
+          .toList(),
+    );
+  }
+
+  AppNotice _noticeFromMap(Map<String, Object?> item) {
+    return AppNotice(
+      id: _text(item['id']),
+      userId: _text(item['userId']),
+      title: _text(item['title']),
+      body: _text(item['body']),
+      createdAt: _time(item['createdAt']),
+      targetType: item['targetType'] as String?,
+      targetId: item['targetId'] as String?,
+    );
+  }
+
+  ContentReport _reportFromMap(Map<String, Object?> item) {
+    return ContentReport(
+      id: _text(item['id']),
+      reporterId: _text(item['reporterId']),
+      targetType: _text(item['targetType']),
+      targetId: _text(item['targetId']),
+      reason: _text(item['reason']),
+    );
+  }
+
+  ResaleListing _listingFromMap(Map<String, Object?> item) {
+    return ResaleListing(
+      id: _text(item['id']),
+      ownershipId: _text(item['ownershipId']),
+      sellerId: _text(item['sellerId']),
+      productId: _text(item['productId']),
+      note: _text(item['note'], fallback: ''),
+    )..status = _text(item['status'], fallback: 'open');
+  }
+
+  GiftRequest _giftFromMap(Map<String, Object?> item) {
+    return GiftRequest(
+      id: _text(item['id']),
+      ownershipId: _text(item['ownershipId']),
+      fromUserId: _text(item['fromUserId']),
+      toUserId: _text(item['toUserId']),
+    )..status = _text(item['status'], fallback: 'pending');
+  }
+
+  ResaleInterest _interestFromMap(Map<String, Object?> item) {
+    return ResaleInterest(
+      id: _text(item['id']),
+      listingId: _text(item['listingId']),
+      buyerId: _text(item['buyerId']),
+    );
+  }
+
+  List<Map<String, Object?>> _mapList(Object? value) {
+    if (value is! List) throw const FormatException('Expected a list.');
+    return value.map((item) {
+      if (item is! Map) throw const FormatException('Expected an object.');
+      return Map<String, Object?>.from(item);
+    }).toList();
+  }
+
+  Set<String> _stringSet(Object? value) {
+    if (value is! List) throw const FormatException('Expected a list.');
+    return value.map((item) => '$item').toSet();
+  }
+
+  String _text(Object? value, {String? fallback}) {
+    if (value is String) return value;
+    if (fallback != null) return fallback;
+    throw const FormatException('Expected text.');
+  }
+
+  int _int(Object? value) {
+    if (value is int) return value;
+    throw const FormatException('Expected a number.');
+  }
+
+  DateTime _time(Object? value) {
+    if (value is! String) throw const FormatException('Expected a time.');
+    return DateTime.parse(value);
   }
 }

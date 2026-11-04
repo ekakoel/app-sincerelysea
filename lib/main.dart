@@ -7,11 +7,16 @@ import 'data/local_store.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  final store = LocalAppStore();
   final preferences = await SharedPreferences.getInstance();
-  store.onboardingComplete =
-      preferences.getBool('onboarding_complete') ?? false;
-  store.darkMode = preferences.getBool('dark_mode') ?? false;
+  final store = LocalAppStore(
+    persistence: PreferencesSnapshotPersistence(preferences),
+  );
+  await store.restore();
+  if (!store.restored) {
+    store.onboardingComplete =
+        preferences.getBool('onboarding_complete') ?? false;
+    store.darkMode = preferences.getBool('dark_mode') ?? false;
+  }
   store.addListener(() {
     preferences.setBool('onboarding_complete', store.onboardingComplete);
     preferences.setBool('dark_mode', store.darkMode);
@@ -46,5 +51,20 @@ class SincerelySeaApp extends StatelessWidget {
         },
       ),
     );
+  }
+}
+
+class PreferencesSnapshotPersistence implements SnapshotPersistence {
+  PreferencesSnapshotPersistence(this.preferences);
+
+  final SharedPreferences preferences;
+  static const key = 'local_snapshot_v1';
+
+  @override
+  Future<String?> load() async => preferences.getString(key);
+
+  @override
+  void save(String raw) {
+    preferences.setString(key, raw);
   }
 }

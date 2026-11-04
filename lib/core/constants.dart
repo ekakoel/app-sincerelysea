@@ -10,3 +10,10 @@ const galleryAssets = [
   'assets/photos/viola.jpg',
   'assets/photos/atelier.jpg',
 ];
+
+const supportEmail = 'arthakaryadigital@gmail.com';
+
+const appVersionLabel = '1.0.0+1';
+
+const betaNotice =
+    'Closed beta: accounts stay on this device. Other phones do not see new posts until Firebase is connected.';

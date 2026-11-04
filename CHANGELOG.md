@@ -9,7 +9,10 @@ Format mengikuti [Keep a Changelog](https://keepachangelog.com/en/1.1.0/). Versi
 - Aplikasi pelanggan Flutter: splash, onboarding, feed, discover per kota, toko, koleksi, profil, dan pesan.
 - Adaptor lokal untuk autentikasi, pesanan, dan kepemilikan sampai Firebase dikonfigurasi.
 - Aturan Firestore, Storage, dan Cloud Functions yang belum di-deploy.
-- Alur GitHub Actions untuk `flutter analyze` dan `flutter test`.
+- Akun dan pesanan beta tersimpan di perangkat lewat snapshot lokal.
+- Kebijakan privasi, syarat, halaman tentang, dan penghapusan akun yang lebih lengkap.
+- Privacy manifest iOS, jawaban ekspor enkripsi, dan aturan cadangan Android.
+- Panduan rilis toko di `docs/STORE.md`.
 
 ### Security
 

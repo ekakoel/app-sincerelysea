@@ -10,6 +10,7 @@ import '../auth/auth_pages.dart';
 import '../feed/feed_pages.dart';
 import '../messages/message_pages.dart';
 import '../shop/shop_pages.dart';
+import 'legal_page.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -20,35 +21,46 @@ class ProfilePage extends StatelessWidget {
     final user = store.session;
     if (user == null) {
       return SafeArea(
-        child: Padding(
+        bottom: false,
+        child: ListView(
           padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const BrandWordmark(width: 160),
-              const Spacer(),
-              Text(
-                'Your profile',
-                style: Theme.of(context).textTheme.headlineMedium,
+          children: [
+            const BrandWordmark(width: 160),
+            const SizedBox(height: 28),
+            Text(
+              'Your profile',
+              style: Theme.of(context).textTheme.headlineMedium,
+            ),
+            const SizedBox(height: 8),
+            const Text('Sign in to post, order, and keep a collection.'),
+            const SizedBox(height: 8),
+            Text(betaNotice, style: Theme.of(context).textTheme.bodySmall),
+            const SizedBox(height: 16),
+            AppButton(
+              key: const Key('sign-in-cta'),
+              label: 'Sign in',
+              onPressed: () => openLogin(context),
+            ),
+            const SizedBox(height: 8),
+            OutlinedButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const RegisterPage()),
               ),
-              const SizedBox(height: 8),
-              const Text('Sign in to post, order, and keep a collection.'),
-              const SizedBox(height: 16),
-              AppButton(
-                key: const Key('sign-in-cta'),
-                label: 'Sign in',
-                onPressed: () => openLogin(context),
+              child: const Text('Create an account'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const LegalPage()),
               ),
-              const SizedBox(height: 8),
-              OutlinedButton(
-                onPressed: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => const RegisterPage()),
-                ),
-                child: const Text('Create an account'),
+              child: const Text('Privacy and terms'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const AboutPage()),
               ),
-              const Spacer(),
-            ],
-          ),
+              child: const Text('About'),
+            ),
+          ],
         ),
       );
     }
@@ -322,8 +334,21 @@ class SettingsPage extends StatelessWidget {
           const AppSection(
             title: 'Privacy',
             child: Text(
-              'Public posts show a city only. Precise coordinates are not stored. Device location is not requested.',
+              'Public posts show a city only. Precise coordinates are not stored. Device location is not requested. $betaNotice',
             ),
+          ),
+          const SizedBox(height: 12),
+          AppListTile(
+            title: 'Privacy and terms',
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute<void>(builder: (_) => const LegalPage())),
+          ),
+          AppListTile(
+            title: 'About',
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute<void>(builder: (_) => const AboutPage())),
           ),
           const SizedBox(height: 12),
           AppListTile(
@@ -349,7 +374,7 @@ class SettingsPage extends StatelessWidget {
                 builder: (context) => AlertDialog(
                   title: const Text('Delete account'),
                   content: const Text(
-                    'This removes the local account. It cannot grant or keep administrator access.',
+                    'This deletes the profile, posts, comments, and messages stored on this device. Order records can remain as transaction history. It does not grant administrator access.',
                   ),
                   actions: [
                     TextButton(
