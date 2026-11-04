@@ -50,6 +50,46 @@ void main() {
     expect(orderStatusLabel(OrderStatus.awaitingPayment), 'Awaiting payment');
   });
 
+  test('GPS is kept only when the author opts in', () {
+    expect(
+      mapPointIfOptedIn(shareOnMap: false, latitude: -8.6, longitude: 115.2),
+      isNull,
+    );
+    expect(
+      mapPointIfOptedIn(shareOnMap: true, latitude: -8.6, longitude: 115.2),
+      isNotNull,
+    );
+    expect(
+      mapPointIfOptedIn(shareOnMap: true, latitude: 120, longitude: 10),
+      isNull,
+    );
+    final quiet = communityHeat(
+      likes: 0,
+      comments: 0,
+      saves: 0,
+      shares: 0,
+      age: const Duration(days: 30),
+      followsAuthor: false,
+      followsProduct: false,
+      topic: 'story',
+    );
+    final talked = communityHeat(
+      likes: 1,
+      comments: 3,
+      saves: 1,
+      shares: 0,
+      age: const Duration(hours: 2),
+      followsAuthor: true,
+      followsProduct: false,
+      topic: 'care',
+    );
+    expect(talked, greaterThan(quiet));
+    expect(
+      mapDominance(talked, talked),
+      greaterThan(mapDominance(quiet, talked)),
+    );
+  });
+
   test('captions stop at 15 characters and places stay at city level', () {
     expect(
       captionPreview('Jane, on the way to the studio'),

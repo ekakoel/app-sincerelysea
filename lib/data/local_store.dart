@@ -43,6 +43,9 @@ class CommunityPost {
     required this.createdAt,
     this.productId,
     this.shareCount = 0,
+    this.latitude,
+    this.longitude,
+    this.topic = 'story',
   });
 
   final String id;
@@ -53,6 +56,11 @@ class CommunityPost {
   final DateTime createdAt;
   final String? productId;
   int shareCount;
+  final double? latitude;
+  final double? longitude;
+  final String topic;
+
+  bool get sharesMapPoint => latitude != null && longitude != null;
 }
 
 class PostComment {
@@ -245,6 +253,15 @@ class MemorySnapshotPersistence implements SnapshotPersistence {
 /// Local adapter used until Firebase credentials are configured.
 /// Passwords are hashed and never written to Firestore.
 /// Administrator access cannot be granted from this client.
+const _seedPoints = <String, PostPoint>{
+  'post-mira': PostPoint(latitude: -8.667, longitude: 115.216),
+  'post-sari': PostPoint(latitude: -8.718, longitude: 115.169),
+  'post-dita': PostPoint(latitude: -8.655, longitude: 115.222),
+  'post-ayu': PostPoint(latitude: -8.275, longitude: 115.167),
+  'post-atelier': PostPoint(latitude: -8.682, longitude: 115.204),
+  'post-sand': PostPoint(latitude: -8.731, longitude: 115.168),
+};
+
 class LocalAppStore extends ChangeNotifier {
   LocalAppStore({DateTime Function()? clock, this.persistence})
     : _clock = clock ?? DateTime.now {
@@ -269,6 +286,7 @@ class LocalAppStore extends ChangeNotifier {
   final Set<String> likes = {};
   final Set<String> saves = {};
   final Set<String> wishlist = {};
+  final Set<String> follows = {};
 
   final List<ResaleListing> listings = [];
   final List<GiftRequest> gifts = [];
@@ -415,6 +433,9 @@ class LocalAppStore extends ChangeNotifier {
         city: 'Denpasar',
         createdAt: _clock().subtract(const Duration(hours: 2)),
         productId: 'jane-medium',
+        topic: 'experience',
+        latitude: -8.667,
+        longitude: 115.216,
       ),
       CommunityPost(
         id: 'post-sari',
@@ -423,6 +444,9 @@ class LocalAppStore extends ChangeNotifier {
         caption: 'Morning light, the strap still new',
         city: 'Kuta',
         createdAt: _clock().subtract(const Duration(hours: 5)),
+        topic: 'story',
+        latitude: -8.718,
+        longitude: 115.169,
       ),
       CommunityPost(
         id: 'post-dita',
@@ -433,6 +457,9 @@ class LocalAppStore extends ChangeNotifier {
         createdAt: _clock().subtract(const Duration(days: 1)),
         productId: 'viola-sling',
         shareCount: 7,
+        topic: 'experience',
+        latitude: -8.655,
+        longitude: 115.222,
       ),
       CommunityPost(
         id: 'post-ayu',
@@ -442,14 +469,20 @@ class LocalAppStore extends ChangeNotifier {
         city: 'Bedugul',
         createdAt: _clock().subtract(const Duration(days: 2)),
         productId: 'jane-medium',
+        topic: 'story',
+        latitude: -8.275,
+        longitude: 115.167,
       ),
       CommunityPost(
         id: 'post-atelier',
         authorId: mira.id,
         imageAsset: 'assets/photos/atelier.jpg',
-        caption: 'Stitching the strap before it leaves',
+        caption: 'Condition the strap, then let it rest',
         city: 'Denpasar',
         createdAt: _clock().subtract(const Duration(days: 4)),
+        topic: 'care',
+        latitude: -8.682,
+        longitude: 115.204,
       ),
       CommunityPost(
         id: 'post-sand',
@@ -459,8 +492,52 @@ class LocalAppStore extends ChangeNotifier {
         city: 'Kuta',
         createdAt: _clock().subtract(const Duration(days: 6)),
         productId: 'jane-sand',
+        topic: 'experience',
+        latitude: -8.731,
+        longitude: 115.168,
       ),
     ]);
+    comments.addAll([
+      PostComment(
+        id: 'comment-mira-1',
+        postId: 'post-mira',
+        authorId: ayu.id,
+        body: 'How do you keep the cognac from spotting after rain?',
+        createdAt: _clock().subtract(const Duration(hours: 1)),
+      ),
+      PostComment(
+        id: 'comment-mira-2',
+        postId: 'post-mira',
+        authorId: mira.id,
+        body: 'A dry cloth the same day. I leave the patina alone.',
+        createdAt: _clock().subtract(const Duration(minutes: 40)),
+      ),
+      PostComment(
+        id: 'comment-dita-1',
+        postId: 'post-dita',
+        authorId: sari.id,
+        body: 'The sling sits well for a market morning.',
+        createdAt: _clock().subtract(const Duration(hours: 20)),
+      ),
+      PostComment(
+        id: 'comment-care-1',
+        postId: 'post-atelier',
+        authorId: dita.id,
+        body: 'Do you condition the strap every season?',
+        createdAt: _clock().subtract(const Duration(days: 3)),
+      ),
+    ]);
+    likes.addAll([
+      'user-ayu|post-mira',
+      'user-sari|post-mira',
+      'user-dita|post-mira',
+      'user-mira|post-dita',
+      'user-ayu|post-dita',
+      'user-dita|post-sand',
+      'user-mira|post-atelier',
+    ]);
+    saves.addAll(['user-ayu|post-mira', 'user-sari|post-atelier']);
+    follows.add('user-ayu|user-mira');
 
     orders.add(
       CustomerOrder(
@@ -525,13 +602,97 @@ class LocalAppStore extends ChangeNotifier {
 
   AppUser? userById(String id) => users[id];
 
-  List<CommunityPost> feedPage({required int offset, int limit = 4}) {
+  List<CommunityPost> feedPage({required int offset, int limit = 6}) {
     final sorted = [...posts]
       ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     if (offset >= sorted.length) return const [];
     final end = offset + limit > sorted.length ? sorted.length : offset + limit;
     return sorted.sublist(offset, end);
   }
+
+  int heatFor(CommunityPost post, {String? viewerId}) {
+    final followsAuthor =
+        viewerId != null && follows.contains('$viewerId|${post.authorId}');
+    final followsProduct =
+        viewerId != null &&
+        post.productId != null &&
+        posts.any(
+          (other) =>
+              other.id != post.id &&
+              other.productId == post.productId &&
+              likedBy(viewerId, other.id),
+        );
+    return communityHeat(
+      likes: likeCount(post.id),
+      comments: commentCount(post.id),
+      saves: saveCount(post.id),
+      shares: post.shareCount,
+      age: _clock().difference(post.createdAt),
+      followsAuthor: followsAuthor,
+      followsProduct: followsProduct,
+      topic: post.topic,
+    );
+  }
+
+  List<CommunityPost> rankedPosts({String? viewerId, String topic = 'all'}) {
+    final list = [
+      for (final post in posts)
+        if (topic == 'all' || post.topic == topic) post,
+    ];
+    list.sort((a, b) {
+      final byHeat = heatFor(
+        b,
+        viewerId: viewerId,
+      ).compareTo(heatFor(a, viewerId: viewerId));
+      if (byHeat != 0) return byHeat;
+      return b.createdAt.compareTo(a.createdAt);
+    });
+    return list;
+  }
+
+  int productPopularity(String productId) {
+    var postCount = 0;
+    var likeTotal = 0;
+    var commentTotal = 0;
+    var saveTotal = 0;
+    for (final post in posts) {
+      if (post.productId != productId) continue;
+      postCount += 1;
+      likeTotal += likeCount(post.id);
+      commentTotal += commentCount(post.id);
+      saveTotal += saveCount(post.id);
+    }
+    final orderCount = orders.where((order) {
+      if (order.status == OrderStatus.cancelled ||
+          order.status == OrderStatus.failed) {
+        return false;
+      }
+      return order.lines.any((line) => line.productId == productId);
+    }).length;
+    return productPopularityScore(
+      posts: postCount,
+      likes: likeTotal,
+      comments: commentTotal,
+      saves: saveTotal,
+      orders: orderCount,
+    );
+  }
+
+  void toggleFollow(String userId) {
+    final user = _requireSession();
+    if (user.id == userId) {
+      throw StoreException('You cannot follow yourself.');
+    }
+    if (!users.containsKey(userId)) {
+      throw StoreException('Member not found.');
+    }
+    final key = '${user.id}|$userId';
+    if (!follows.add(key)) follows.remove(key);
+    notifyListeners();
+  }
+
+  bool isFollowing(String followerId, String userId) =>
+      follows.contains('$followerId|$userId');
 
   int likeCount(String postId) =>
       likes.where((key) => key.endsWith('|$postId')).length;
@@ -689,6 +850,9 @@ class LocalAppStore extends ChangeNotifier {
     likes.removeWhere((key) => key.startsWith('$id|'));
     saves.removeWhere((key) => key.startsWith('$id|'));
     wishlist.removeWhere((key) => key.startsWith('$id|'));
+    follows.removeWhere(
+      (key) => key.startsWith('$id|') || key.endsWith('|$id'),
+    );
     blocks.removeWhere((key) => key.startsWith('$id|') || key.endsWith('|$id'));
     conversations.removeWhere(
       (conversation) => conversation.participantIds.contains(id),
@@ -767,6 +931,10 @@ class LocalAppStore extends ChangeNotifier {
     required String caption,
     required String city,
     String? productId,
+    String topic = 'story',
+    bool shareOnMap = false,
+    double? latitude,
+    double? longitude,
   }) {
     final user = _requireSession();
     if (!user.emailVerified) {
@@ -774,10 +942,18 @@ class LocalAppStore extends ChangeNotifier {
     }
     final place = PublicPlace(city.trim());
     if (!place.isCityLevel) {
-      throw StoreException('Share a city, not a pin.');
+      throw StoreException('Share a city, not a coordinate in the city name.');
     }
     if (caption.trim().length < 3) {
       throw StoreException('Add a caption.');
+    }
+    final point = mapPointIfOptedIn(
+      shareOnMap: shareOnMap,
+      latitude: latitude,
+      longitude: longitude,
+    );
+    if (shareOnMap && point == null) {
+      throw StoreException('Choose a point on the map before sharing GPS.');
     }
     final post = CommunityPost(
       id: _id('post'),
@@ -787,6 +963,9 @@ class LocalAppStore extends ChangeNotifier {
       city: place.city,
       createdAt: _clock(),
       productId: productId,
+      topic: postTopics.contains(topic) ? topic : 'story',
+      latitude: point?.latitude,
+      longitude: point?.longitude,
     );
     posts.insert(0, post);
     notifyListeners();
@@ -1156,6 +1335,7 @@ class LocalAppStore extends ChangeNotifier {
     likes.clear();
     saves.clear();
     wishlist.clear();
+    follows.clear();
     listings.clear();
     gifts.clear();
     interests.clear();
@@ -1201,6 +1381,9 @@ class LocalAppStore extends ChangeNotifier {
               'createdAt': post.createdAt.toIso8601String(),
               'productId': post.productId,
               'shareCount': post.shareCount,
+              'latitude': post.latitude,
+              'longitude': post.longitude,
+              'topic': post.topic,
             },
           )
           .toList(),
@@ -1309,6 +1492,7 @@ class LocalAppStore extends ChangeNotifier {
       'likes': likes.toList(),
       'saves': saves.toList(),
       'wishlist': wishlist.toList(),
+      'follows': follows.toList(),
       'blocks': blocks.toList(),
       'listings': listings
           .map(
@@ -1434,6 +1618,9 @@ class LocalAppStore extends ChangeNotifier {
     wishlist
       ..clear()
       ..addAll(_stringSet(data['wishlist']));
+    follows
+      ..clear()
+      ..addAll(_stringSet(data['follows']));
     blocks
       ..clear()
       ..addAll(_stringSet(data['blocks']));
@@ -1468,8 +1655,13 @@ class LocalAppStore extends ChangeNotifier {
   }
 
   CommunityPost _postFromMap(Map<String, Object?> item) {
+    final id = _text(item['id']);
+    final seeded = _seedPoints[id];
+    final latitude = _optionalDouble(item['latitude']) ?? seeded?.latitude;
+    final longitude = _optionalDouble(item['longitude']) ?? seeded?.longitude;
+    final topic = item['topic'];
     return CommunityPost(
-      id: _text(item['id']),
+      id: id,
       authorId: _text(item['authorId']),
       imageAsset: _text(item['imageAsset']),
       caption: _text(item['caption']),
@@ -1477,6 +1669,9 @@ class LocalAppStore extends ChangeNotifier {
       createdAt: _time(item['createdAt']),
       productId: item['productId'] as String?,
       shareCount: _int(item['shareCount']),
+      latitude: latitude,
+      longitude: longitude,
+      topic: topic is String && postTopics.contains(topic) ? topic : 'story',
     );
   }
 
@@ -1616,6 +1811,11 @@ class LocalAppStore extends ChangeNotifier {
   int _int(Object? value) {
     if (value is int) return value;
     throw const FormatException('Expected a number.');
+  }
+
+  double? _optionalDouble(Object? value) {
+    if (value is num) return value.toDouble();
+    return null;
   }
 
   DateTime _time(Object? value) {

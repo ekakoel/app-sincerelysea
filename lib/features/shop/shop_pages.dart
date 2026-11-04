@@ -42,7 +42,7 @@ class ShopPage extends StatelessWidget {
           Text('Shop', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 4),
           Text(
-            'Pre-order. Prices are catalog prices, not a client total.',
+            'Official SincerelySea catalog. Made to order. The price is the catalog price, not a number typed on this phone.',
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 16),
@@ -337,7 +337,9 @@ class _CheckoutPageState extends State<CheckoutPage> {
           else
             const Text('The cart cannot be quoted.'),
           const SizedBox(height: 8),
-          const Text('Submitting does not mark this order paid.'),
+          const Text(
+            'Original catalog piece. Placing the order does not mark it paid.',
+          ),
           const SizedBox(height: 16),
           AppButton(
             key: const Key('place-order'),

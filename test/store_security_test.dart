@@ -22,10 +22,17 @@ void main() {
       email: LocalAppStore.fixtureEmail,
       password: LocalAppStore.fixturePassword,
     );
+    final beforeLikes = store.likeCount('post-mira');
+    final wasLiked = store.likedBy(store.session!.id, 'post-mira');
     store.toggleLike('post-mira');
     store.toggleLike('post-mira');
     store.toggleLike('post-mira');
-    expect(store.likeCount('post-mira'), 1);
+    expect(store.likedBy(store.session!.id, 'post-mira'), isNot(wasLiked));
+    expect(
+      store.likeCount('post-mira'),
+      wasLiked ? beforeLikes - 1 : beforeLikes + 1,
+    );
+    final beforeComments = store.commentCount('post-mira');
     final comment = store.addComment('post-mira', 'The edge is clean.');
     store.logout();
     store.login(email: 'mira@sincerelysea.dev', password: 'not-a-login');
@@ -33,7 +40,7 @@ void main() {
       () => store.deleteOwnComment(comment.id),
       throwsA(isA<StoreException>()),
     );
-    expect(store.commentCount('post-mira'), 1);
+    expect(store.commentCount('post-mira'), beforeComments + 1);
   });
 
   test('orders ignore a forged total and cannot be marked paid', () {
@@ -99,6 +106,25 @@ void main() {
       ),
       throwsA(isA<StoreException>()),
     );
+    final hidden = store.publishPost(
+      imageAsset: 'assets/photos/bali.jpg',
+      caption: 'City only today',
+      city: 'Denpasar',
+      shareOnMap: false,
+      latitude: -8.65,
+      longitude: 115.21,
+    );
+    expect(hidden.sharesMapPoint, isFalse);
+    final shared = store.publishPost(
+      imageAsset: 'assets/photos/bali.jpg',
+      caption: 'Pin I chose',
+      city: 'Kuta',
+      shareOnMap: true,
+      latitude: -8.72,
+      longitude: 115.17,
+    );
+    expect(shared.latitude, closeTo(-8.72, 0.001));
+    expect(shared.longitude, closeTo(115.17, 0.001));
   });
 
   test('moderation and loyalty stay closed', () {

@@ -146,12 +146,121 @@ bool clientMayMarkOrderPaid() => false;
 
 bool clientMayVerifyOwnership() => false;
 
-/// Public posts expose a city label only. Precise coordinates are not a field.
+/// A city label is always public. A GPS point is separate and optional.
 class PublicPlace {
   const PublicPlace(this.city);
   final String city;
 
   bool get isCityLevel => city.trim().isNotEmpty && !city.contains(',');
+}
+
+/// Coordinates the author chose to publish. Never a live device track.
+class PostPoint {
+  const PostPoint({required this.latitude, required this.longitude});
+
+  final double latitude;
+  final double longitude;
+
+  bool get isValid =>
+      latitude >= -90 &&
+      latitude <= 90 &&
+      longitude >= -180 &&
+      longitude <= 180;
+}
+
+const cityCenters = <String, PostPoint>{
+  'Denpasar': PostPoint(latitude: -8.6705, longitude: 115.2126),
+  'Kuta': PostPoint(latitude: -8.7224, longitude: 115.1767),
+  'Bedugul': PostPoint(latitude: -8.2750, longitude: 115.1667),
+  'Ubud': PostPoint(latitude: -8.5069, longitude: 115.2625),
+  'Sanur': PostPoint(latitude: -8.7080, longitude: 115.2620),
+};
+
+const postTopics = ['story', 'care', 'experience'];
+
+String topicLabel(String topic) {
+  switch (topic) {
+    case 'care':
+      return 'Care';
+    case 'experience':
+      return 'Experience';
+    default:
+      return 'Story';
+  }
+}
+
+/// Drops coordinates unless the author opted in and both values are valid.
+PostPoint? mapPointIfOptedIn({
+  required bool shareOnMap,
+  double? latitude,
+  double? longitude,
+}) {
+  if (!shareOnMap || latitude == null || longitude == null) return null;
+  final point = PostPoint(latitude: latitude, longitude: longitude);
+  if (!point.isValid) return null;
+  return point;
+}
+
+/// Ranks a story for the community, not for advertising.
+/// Comments weigh more than likes so a conversation stays visible.
+int communityHeat({
+  required int likes,
+  required int comments,
+  required int saves,
+  required int shares,
+  required Duration age,
+  required bool followsAuthor,
+  required bool followsProduct,
+  required String topic,
+}) {
+  final safeLikes = likes < 0 ? 0 : likes;
+  final safeComments = comments < 0 ? 0 : comments;
+  final safeSaves = saves < 0 ? 0 : saves;
+  final safeShares = shares < 0 ? 0 : shares;
+  final engagement =
+      safeLikes * 3 + safeComments * 5 + safeSaves * 4 + safeShares * 2;
+  final hours = age.isNegative ? 0 : age.inMinutes / 60.0;
+  final recency = hours < 6
+      ? 12
+      : hours < 48
+      ? 6
+      : hours < 24 * 7
+      ? 2
+      : 0;
+  final connection = (followsAuthor ? 8 : 0) + (followsProduct ? 6 : 0);
+  final practice = topic == 'care' || topic == 'experience' ? 3 : 0;
+  final talk = safeComments > 0 ? 4 : 0;
+  return engagement + recency + connection + practice + talk;
+}
+
+/// 0.38 for a quiet pin, up to 1 for the most active story on the map.
+double mapDominance(int heat, int maxHeat) {
+  if (maxHeat <= 0) return 0.42;
+  final ratio = (heat / maxHeat).clamp(0.0, 1.0);
+  return 0.38 + ratio * 0.62;
+}
+
+int productPopularityScore({
+  required int posts,
+  required int likes,
+  required int comments,
+  required int saves,
+  required int orders,
+}) {
+  final safePosts = posts < 0 ? 0 : posts;
+  final safeLikes = likes < 0 ? 0 : likes;
+  final safeComments = comments < 0 ? 0 : comments;
+  final safeSaves = saves < 0 ? 0 : saves;
+  final safeOrders = orders < 0 ? 0 : orders;
+  return safePosts * 2 +
+      safeLikes * 3 +
+      safeComments * 4 +
+      safeSaves * 3 +
+      safeOrders * 5;
+}
+
+String formatPoint(double latitude, double longitude) {
+  return '${latitude.toStringAsFixed(2)}, ${longitude.toStringAsFixed(2)}';
 }
 
 String captionPreview(String text, {int maxChars = 15}) {
