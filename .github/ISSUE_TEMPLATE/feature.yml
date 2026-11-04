@@ -1,0 +1,19 @@
+name: Perubahan
+description: Usulan perilaku produk yang belum ada
+title: "[Perubahan] "
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Hasil yang dibutuhkan
+      description: Jelaskan perilaku bagi pelanggan atau admin, bukan hanya nama layar.
+    validations:
+      required: true
+  - type: textarea
+    id: boundary
+    attributes:
+      label: Batas
+      description: Apa yang tidak boleh dilakukan perubahan ini, terutama pada harga, pembayaran, lokasi, dan kepemilikan.
+    validations:
+      required: false

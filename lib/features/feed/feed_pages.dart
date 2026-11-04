@@ -47,7 +47,9 @@ class _HomePageState extends State<HomePage> {
                       return;
                     }
                     Navigator.of(context).push(
-                      MaterialPageRoute<void>(builder: (_) => const NotificationPage()),
+                      MaterialPageRoute<void>(
+                        builder: (_) => const NotificationPage(),
+                      ),
                     );
                   },
                   icon: const Icon(Icons.notifications_none),
@@ -61,7 +63,9 @@ class _HomePageState extends State<HomePage> {
                       return;
                     }
                     Navigator.of(context).push(
-                      MaterialPageRoute<void>(builder: (_) => const CreatePostPage()),
+                      MaterialPageRoute<void>(
+                        builder: (_) => const CreatePostPage(),
+                      ),
                     );
                   },
                   icon: const Icon(Icons.add),
@@ -87,7 +91,11 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  List<Widget> _columns(BuildContext context, LocalAppStore store, List<CommunityPost> posts) {
+  List<Widget> _columns(
+    BuildContext context,
+    LocalAppStore store,
+    List<CommunityPost> posts,
+  ) {
     final wide = MediaQuery.sizeOf(context).width >= 600;
     if (!wide) {
       return [for (final post in posts) _PostCard(post: post, store: store)];
@@ -101,9 +109,21 @@ class _HomePageState extends State<HomePage> {
       Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(child: Column(children: [for (final post in left) _PostCard(post: post, store: store)])),
+          Expanded(
+            child: Column(
+              children: [
+                for (final post in left) _PostCard(post: post, store: store),
+              ],
+            ),
+          ),
           const SizedBox(width: 12),
-          Expanded(child: Column(children: [for (final post in right) _PostCard(post: post, store: store)])),
+          Expanded(
+            child: Column(
+              children: [
+                for (final post in right) _PostCard(post: post, store: store),
+              ],
+            ),
+          ),
         ],
       ),
     ];
@@ -129,7 +149,9 @@ class _PostCard extends StatelessWidget {
           children: [
             GestureDetector(
               onTap: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => PostDetailPage(postId: post.id)),
+                MaterialPageRoute<void>(
+                  builder: (_) => PostDetailPage(postId: post.id),
+                ),
               ),
               child: PhotoFrame(asset: post.imageAsset, height: 220, radius: 8),
             ),
@@ -138,7 +160,9 @@ class _PostCard extends StatelessWidget {
               children: [
                 CircleAvatar(
                   radius: 14,
-                  backgroundImage: author?.avatarAsset == null ? null : AssetImage(author!.avatarAsset!),
+                  backgroundImage: author?.avatarAsset == null
+                      ? null
+                      : AssetImage(author!.avatarAsset!),
                 ),
                 const SizedBox(width: 8),
                 Expanded(
@@ -152,7 +176,9 @@ class _PostCard extends StatelessWidget {
             const SizedBox(height: 6),
             GestureDetector(
               onTap: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => PostDetailPage(postId: post.id)),
+                MaterialPageRoute<void>(
+                  builder: (_) => PostDetailPage(postId: post.id),
+                ),
               ),
               child: Text(preview),
             ),
@@ -161,26 +187,34 @@ class _PostCard extends StatelessWidget {
               children: [
                 _Count(
                   key: Key('like-${post.id}'),
-                  icon: store.session != null && store.likedBy(store.session!.id, post.id)
+                  icon:
+                      store.session != null &&
+                          store.likedBy(store.session!.id, post.id)
                       ? Icons.favorite
                       : Icons.favorite_border,
                   count: store.likeCount(post.id),
-                  onTap: () => _engage(context, () => store.toggleLike(post.id)),
+                  onTap: () =>
+                      _engage(context, () => store.toggleLike(post.id)),
                 ),
                 _Count(
                   icon: Icons.chat_bubble_outline,
                   count: store.commentCount(post.id),
                   onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (_) => PostDetailPage(postId: post.id)),
+                    MaterialPageRoute<void>(
+                      builder: (_) => PostDetailPage(postId: post.id),
+                    ),
                   ),
                 ),
                 _Count(
                   key: Key('save-${post.id}'),
-                  icon: store.session != null && store.savedBy(store.session!.id, post.id)
+                  icon:
+                      store.session != null &&
+                          store.savedBy(store.session!.id, post.id)
                       ? Icons.bookmark
                       : Icons.bookmark_border,
                   count: store.saveCount(post.id),
-                  onTap: () => _engage(context, () => store.toggleSave(post.id)),
+                  onTap: () =>
+                      _engage(context, () => store.toggleSave(post.id)),
                 ),
                 _Count(
                   key: Key('share-${post.id}'),
@@ -206,7 +240,12 @@ class _PostCard extends StatelessWidget {
 }
 
 class _Count extends StatelessWidget {
-  const _Count({super.key, required this.icon, required this.count, required this.onTap});
+  const _Count({
+    super.key,
+    required this.icon,
+    required this.count,
+    required this.onTap,
+  });
 
   final IconData icon;
   final int count;
@@ -255,18 +294,25 @@ class _PostDetailPageState extends State<PostDetailPage> {
   Widget build(BuildContext context) {
     final store = context.watch<LocalAppStore>();
     final post = store.posts.cast<CommunityPost?>().firstWhere(
-          (item) => item!.id == widget.postId,
-          orElse: () => null,
-        );
+      (item) => item!.id == widget.postId,
+      orElse: () => null,
+    );
     if (post == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: const AppEmptyState(title: 'Post unavailable', body: 'This story is no longer here.'),
+        body: const AppEmptyState(
+          title: 'Post unavailable',
+          body: 'This story is no longer here.',
+        ),
       );
     }
     final author = store.userById(post.authorId);
-    final comments = store.comments.where((item) => item.postId == post.id).toList();
-    final product = post.productId == null ? null : store.catalog[post.productId];
+    final comments = store.comments
+        .where((item) => item.postId == post.id)
+        .toList();
+    final product = post.productId == null
+        ? null
+        : store.catalog[post.productId];
     return Scaffold(
       appBar: AppBar(
         title: const Text('Story'),
@@ -275,7 +321,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
             IconButton(
               tooltip: 'Delete post',
               onPressed: () {
-                final ok = runStore(context, () => store.deleteOwnPost(post.id));
+                final ok = runStore(
+                  context,
+                  () => store.deleteOwnPost(post.id),
+                );
                 if (ok && context.mounted) Navigator.of(context).pop();
               },
               icon: const Icon(Icons.delete_outline),
@@ -289,9 +338,15 @@ class _PostDetailPageState extends State<PostDetailPage> {
               }
               final ok = runStore(
                 context,
-                () => store.report(targetType: 'post', targetId: post.id, reason: 'Community report'),
+                () => store.report(
+                  targetType: 'post',
+                  targetId: post.id,
+                  reason: 'Community report',
+                ),
               );
-              if (ok && context.mounted) showAppFeedback(context, 'Report sent to moderation.');
+              if (ok && context.mounted) {
+                showAppFeedback(context, 'Report sent to moderation.');
+              }
             },
             icon: const Icon(Icons.flag_outlined),
           ),
@@ -311,12 +366,16 @@ class _PostDetailPageState extends State<PostDetailPage> {
               title: product.name,
               subtitle: formatIdr(product.priceIdr),
               onTap: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => ProductPage(productId: product.id)),
+                MaterialPageRoute<void>(
+                  builder: (_) => ProductPage(productId: product.id),
+                ),
               ),
             ),
           ],
           const SizedBox(height: 8),
-          Text('${store.likeCount(post.id)} likes · ${store.saveCount(post.id)} saves · ${post.shareCount} shares'),
+          Text(
+            '${store.likeCount(post.id)} likes · ${store.saveCount(post.id)} saves · ${post.shareCount} shares',
+          ),
           const SizedBox(height: 16),
           Text('Comments', style: Theme.of(context).textTheme.titleMedium),
           if (comments.isEmpty)
@@ -327,11 +386,16 @@ class _PostDetailPageState extends State<PostDetailPage> {
           for (final comment in comments)
             ListTile(
               contentPadding: EdgeInsets.zero,
-              title: Text(store.userById(comment.authorId)?.displayName ?? 'Member'),
+              title: Text(
+                store.userById(comment.authorId)?.displayName ?? 'Member',
+              ),
               subtitle: Text(comment.body),
               trailing: store.session?.id == comment.authorId
                   ? IconButton(
-                      onPressed: () => runStore(context, () => store.deleteOwnComment(comment.id)),
+                      onPressed: () => runStore(
+                        context,
+                        () => store.deleteOwnComment(comment.id),
+                      ),
                       icon: const Icon(Icons.close),
                     )
                   : null,
@@ -346,7 +410,10 @@ class _PostDetailPageState extends State<PostDetailPage> {
                 openLogin(context);
                 return;
               }
-              final ok = runStore(context, () => store.addComment(post.id, _comment.text));
+              final ok = runStore(
+                context,
+                () => store.addComment(post.id, _comment.text),
+              );
               if (ok) _comment.clear();
             },
           ),
@@ -386,7 +453,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
         children: [
           PhotoFrame(asset: _asset, height: 220),
           const SizedBox(height: 12),
-          const Text('Choose a studio photograph. Camera upload waits for Firebase Storage.'),
+          const Text(
+            'Choose a studio photograph. Camera upload waits for Firebase Storage.',
+          ),
           const SizedBox(height: 8),
           SizedBox(
             height: 72,
@@ -398,7 +467,10 @@ class _CreatePostPageState extends State<CreatePostPage> {
                     padding: const EdgeInsets.only(right: 8),
                     child: GestureDetector(
                       onTap: () => setState(() => _asset = asset),
-                      child: SizedBox(width: 72, child: PhotoFrame(asset: asset, height: 72, radius: 8)),
+                      child: SizedBox(
+                        width: 72,
+                        child: PhotoFrame(asset: asset, height: 72, radius: 8),
+                      ),
                     ),
                   ),
               ],
@@ -410,19 +482,31 @@ class _CreatePostPageState extends State<CreatePostPage> {
           DropdownButtonFormField<String>(
             initialValue: _city,
             decoration: const InputDecoration(labelText: 'City'),
-            items: [for (final city in brandCities) DropdownMenuItem(value: city, child: Text(city))],
+            items: [
+              for (final city in brandCities)
+                DropdownMenuItem(value: city, child: Text(city)),
+            ],
             onChanged: (value) => setState(() => _city = value ?? _city),
           ),
           const SizedBox(height: 8),
-          Text('Shared as kabupaten/kota. A map pin is not attached.', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            'Shared as kabupaten/kota. A map pin is not attached.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String?>(
             initialValue: _productId,
             decoration: const InputDecoration(labelText: 'Product'),
             items: [
-              const DropdownMenuItem<String?>(value: null, child: Text('No product')),
+              const DropdownMenuItem<String?>(
+                value: null,
+                child: Text('No product'),
+              ),
               for (final product in store.catalog.values)
-                DropdownMenuItem<String?>(value: product.id, child: Text(product.name)),
+                DropdownMenuItem<String?>(
+                  value: product.id,
+                  child: Text(product.name),
+                ),
             ],
             onChanged: (value) => setState(() => _productId = value),
           ),
@@ -433,7 +517,9 @@ class _CreatePostPageState extends State<CreatePostPage> {
                 ? null
                 : () async {
                     setState(() => _busy = true);
-                    await Future<void>.delayed(const Duration(milliseconds: 250));
+                    await Future<void>.delayed(
+                      const Duration(milliseconds: 250),
+                    );
                     if (!context.mounted) return;
                     final ok = runStore(context, () {
                       store.publishPost(
@@ -463,11 +549,18 @@ class NotificationPage extends StatelessWidget {
     final user = store.session;
     final notes = user == null
         ? const <AppNotice>[]
-        : store.notices.where((notice) => notice.userId == user.id).toList().reversed.toList();
+        : store.notices
+              .where((notice) => notice.userId == user.id)
+              .toList()
+              .reversed
+              .toList();
     return Scaffold(
       appBar: AppBar(title: const Text('Notifications')),
       body: notes.isEmpty
-          ? const AppEmptyState(title: 'No notifications', body: 'Order and community updates will appear here.')
+          ? const AppEmptyState(
+              title: 'No notifications',
+              body: 'Order and community updates will appear here.',
+            )
           : ListView(
               padding: const EdgeInsets.all(20),
               children: [
@@ -475,10 +568,14 @@ class NotificationPage extends StatelessWidget {
                   AppListTile(
                     title: notice.title,
                     subtitle: notice.body,
-                    onTap: notice.targetType == 'order' && notice.targetId != null
+                    onTap:
+                        notice.targetType == 'order' && notice.targetId != null
                         ? () => Navigator.of(context).push(
-                              MaterialPageRoute<void>(builder: (_) => OrderDetailPage(orderId: notice.targetId!)),
-                            )
+                            MaterialPageRoute<void>(
+                              builder: (_) =>
+                                  OrderDetailPage(orderId: notice.targetId!),
+                            ),
+                          )
                         : null,
                   ),
               ],

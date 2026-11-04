@@ -30,7 +30,9 @@ class ShopPage extends StatelessWidget {
                     openLogin(context);
                     return;
                   }
-                  Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const CartPage()));
+                  Navigator.of(context).push(
+                    MaterialPageRoute<void>(builder: (_) => const CartPage()),
+                  );
                 },
                 icon: const Icon(Icons.shopping_bag_outlined),
               ),
@@ -39,21 +41,34 @@ class ShopPage extends StatelessWidget {
           const SizedBox(height: 12),
           Text('Shop', style: Theme.of(context).textTheme.headlineMedium),
           const SizedBox(height: 4),
-          Text('Pre-order. Prices are catalog prices, not a client total.', style: Theme.of(context).textTheme.bodySmall),
+          Text(
+            'Pre-order. Prices are catalog prices, not a client total.',
+            style: Theme.of(context).textTheme.bodySmall,
+          ),
           const SizedBox(height: 16),
           if (products.isEmpty)
-            const AppEmptyState(title: 'No products', body: 'The catalog is empty.')
+            const AppEmptyState(
+              title: 'No products',
+              body: 'The catalog is empty.',
+            )
           else
             for (final product in products) ...[
               GestureDetector(
                 onTap: () => Navigator.of(context).push(
-                  MaterialPageRoute<void>(builder: (_) => ProductPage(productId: product.id)),
+                  MaterialPageRoute<void>(
+                    builder: (_) => ProductPage(productId: product.id),
+                  ),
                 ),
                 child: PhotoFrame(asset: product.imageAsset, height: 220),
               ),
               const SizedBox(height: 8),
-              Text(product.name, style: Theme.of(context).textTheme.titleMedium),
-              Text('${formatIdr(product.priceIdr)} · ${product.preorder ? 'Pre-order' : 'Available'}'),
+              Text(
+                product.name,
+                style: Theme.of(context).textTheme.titleMedium,
+              ),
+              Text(
+                '${formatIdr(product.priceIdr)} · ${product.preorder ? 'Pre-order' : 'Available'}',
+              ),
               const SizedBox(height: 16),
             ],
         ],
@@ -74,10 +89,15 @@ class ProductPage extends StatelessWidget {
     if (product == null) {
       return Scaffold(
         appBar: AppBar(),
-        body: const AppEmptyState(title: 'Product unavailable', body: 'This piece is not in the catalog.'),
+        body: const AppEmptyState(
+          title: 'Product unavailable',
+          body: 'This piece is not in the catalog.',
+        ),
       );
     }
-    final wished = store.session != null && store.wishlist.contains('${store.session!.id}|${product.id}');
+    final wished =
+        store.session != null &&
+        store.wishlist.contains('${store.session!.id}|${product.id}');
     return Scaffold(
       appBar: AppBar(title: Text(product.name)),
       body: ListView(
@@ -85,13 +105,20 @@ class ProductPage extends StatelessWidget {
         children: [
           PhotoFrame(asset: product.imageAsset, height: 280),
           const SizedBox(height: 16),
-          Text(formatIdr(product.priceIdr), style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            formatIdr(product.priceIdr),
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 8),
           Text(product.material),
           const SizedBox(height: 4),
           Text('Variant · ${product.variant}'),
           const SizedBox(height: 4),
-          Text(product.preorder ? 'Pre-order · ${product.fulfillment}' : product.fulfillment),
+          Text(
+            product.preorder
+                ? 'Pre-order · ${product.fulfillment}'
+                : product.fulfillment,
+          ),
           const SizedBox(height: 8),
           const Text(
             'The photograph may be a stand-in until official product photography is supplied. The price above is the catalog price.',
@@ -135,14 +162,21 @@ class CartPage extends StatelessWidget {
     if (user == null) {
       return Scaffold(
         appBar: AppBar(title: const Text('Cart')),
-        body: const AppEmptyState(title: 'Sign in', body: 'A cart belongs to an account.'),
+        body: const AppEmptyState(
+          title: 'Sign in',
+          body: 'A cart belongs to an account.',
+        ),
       );
     }
     final lines = store.cartFor(user.id);
     OrderQuote? quote;
     String? quoteError;
     try {
-      quote = quoteCart(lines: lines, catalog: store.catalog, clientSubtotalIdr: 1);
+      quote = quoteCart(
+        lines: lines,
+        catalog: store.catalog,
+        clientSubtotalIdr: 1,
+      );
     } on QuoteException catch (error) {
       quoteError = error.message;
     }
@@ -152,21 +186,31 @@ class CartPage extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         children: [
           if (lines.isEmpty)
-            const AppEmptyState(title: 'Cart is empty', body: 'Add a piece from the shop.')
+            const AppEmptyState(
+              title: 'Cart is empty',
+              body: 'Add a piece from the shop.',
+            )
           else
             for (final line in lines)
               _CartLine(line: line, product: store.catalog[line.productId]),
           const SizedBox(height: 12),
-          if (quote != null) Text('Catalog total ${formatIdr(quote.subtotalIdr)}'),
+          if (quote != null)
+            Text('Catalog total ${formatIdr(quote.subtotalIdr)}'),
           if (quoteError != null) Text(quoteError),
           const SizedBox(height: 8),
-          const Text('A client-submitted total is ignored. Shipping is confirmed with the order, not invented here.'),
+          const Text(
+            'A client-submitted total is ignored. Shipping is confirmed with the order, not invented here.',
+          ),
           const SizedBox(height: 16),
           AppButton(
             label: 'Checkout',
             onPressed: quote == null
                 ? null
-                : () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const CheckoutPage())),
+                : () => Navigator.of(context).push(
+                    MaterialPageRoute<void>(
+                      builder: (_) => const CheckoutPage(),
+                    ),
+                  ),
           ),
         ],
       ),
@@ -188,17 +232,23 @@ class _CartLine extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(product?.name ?? line.productId),
-          Text('Qty ${line.quantity} · ${product == null ? '' : formatIdr(product!.priceIdr)}'),
+          Text(
+            'Qty ${line.quantity} · ${product == null ? '' : formatIdr(product!.priceIdr)}',
+          ),
           Row(
             children: [
               IconButton(
-                onPressed: () => store.setCartQuantity(line.productId, line.quantity - 1),
+                onPressed: () =>
+                    store.setCartQuantity(line.productId, line.quantity - 1),
                 icon: const Icon(Icons.remove),
               ),
               IconButton(
                 onPressed: line.quantity >= 5
                     ? null
-                    : () => store.setCartQuantity(line.productId, line.quantity + 1),
+                    : () => store.setCartQuantity(
+                        line.productId,
+                        line.quantity + 1,
+                      ),
                 icon: const Icon(Icons.add),
               ),
             ],
@@ -231,11 +281,21 @@ class _CheckoutPageState extends State<CheckoutPage> {
     final store = context.watch<LocalAppStore>();
     final user = store.session;
     if (user == null) {
-      return Scaffold(appBar: AppBar(), body: const AppEmptyState(title: 'Sign in', body: 'Checkout requires an account.'));
+      return Scaffold(
+        appBar: AppBar(),
+        body: const AppEmptyState(
+          title: 'Sign in',
+          body: 'Checkout requires an account.',
+        ),
+      );
     }
     OrderQuote? quote;
     try {
-      quote = quoteCart(lines: store.cartFor(user.id), catalog: store.catalog, clientSubtotalIdr: 0);
+      quote = quoteCart(
+        lines: store.cartFor(user.id),
+        catalog: store.catalog,
+        clientSubtotalIdr: 0,
+      );
     } on QuoteException {
       quote = null;
     }
@@ -244,17 +304,30 @@ class _CheckoutPageState extends State<CheckoutPage> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          Text(user.displayName, style: Theme.of(context).textTheme.titleMedium),
+          Text(
+            user.displayName,
+            style: Theme.of(context).textTheme.titleMedium,
+          ),
           Text(user.email),
           const SizedBox(height: 12),
-          AppTextField(label: 'Shipping address', controller: _address, fieldKey: const Key('ship-to')),
+          AppTextField(
+            label: 'Shipping address',
+            controller: _address,
+            fieldKey: const Key('ship-to'),
+          ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String>(
             initialValue: _method,
             decoration: const InputDecoration(labelText: 'Payment method'),
             items: const [
-              DropdownMenuItem(value: 'Bank transfer', child: Text('Bank transfer')),
-              DropdownMenuItem(value: 'Payment provider', child: Text('Payment provider — not connected')),
+              DropdownMenuItem(
+                value: 'Bank transfer',
+                child: Text('Bank transfer'),
+              ),
+              DropdownMenuItem(
+                value: 'Payment provider',
+                child: Text('Payment provider — not connected'),
+              ),
             ],
             onChanged: (value) => setState(() => _method = value ?? _method),
           ),
@@ -274,14 +347,19 @@ class _CheckoutPageState extends State<CheckoutPage> {
                 : () {
                     CustomerOrder? order;
                     try {
-                      order = store.placeOrder(shipTo: _address.text, clientSubtotalIdr: 1);
+                      order = store.placeOrder(
+                        shipTo: _address.text,
+                        clientSubtotalIdr: 1,
+                      );
                     } on StoreException catch (error) {
                       showAppFeedback(context, error.message);
                       return;
                     }
                     if (!context.mounted) return;
                     Navigator.of(context).pushReplacement(
-                      MaterialPageRoute<void>(builder: (_) => OrderReceivedPage(orderId: order!.id)),
+                      MaterialPageRoute<void>(
+                        builder: (_) => OrderReceivedPage(orderId: order!.id),
+                      ),
                     );
                   },
           ),
@@ -313,11 +391,16 @@ class OrderReceivedPage extends StatelessWidget {
               'This device cannot mark the order paid. Payment is confirmed only after a provider callback on the server.',
             ),
             const Spacer(),
-            AppButton(label: 'View order', onPressed: () {
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute<void>(builder: (_) => OrderDetailPage(orderId: orderId)),
-              );
-            }),
+            AppButton(
+              label: 'View order',
+              onPressed: () {
+                Navigator.of(context).pushReplacement(
+                  MaterialPageRoute<void>(
+                    builder: (_) => OrderDetailPage(orderId: orderId),
+                  ),
+                );
+              },
+            ),
           ],
         ),
       ),
@@ -334,15 +417,18 @@ class OrderDetailPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final store = context.watch<LocalAppStore>();
     final order = store.orders.cast<CustomerOrder?>().firstWhere(
-          (item) => item!.id == orderId,
-          orElse: () => null,
-        );
+      (item) => item!.id == orderId,
+      orElse: () => null,
+    );
     if (order == null ||
         store.session == null ||
         (order.userId != store.session!.id && !store.session!.adminClaim)) {
       return Scaffold(
         appBar: AppBar(),
-        body: const AppEmptyState(title: 'Order unavailable', body: 'This order is not on your account.'),
+        body: const AppEmptyState(
+          title: 'Order unavailable',
+          body: 'This order is not on your account.',
+        ),
       );
     }
     return Scaffold(
@@ -350,12 +436,18 @@ class OrderDetailPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          Text(orderStatusLabel(order.status), style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            orderStatusLabel(order.status),
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           const SizedBox(height: 8),
           Text('Ship to ${order.shipTo}'),
           Text('Catalog total ${formatIdr(order.subtotalIdr)}'),
           const SizedBox(height: 12),
-          for (final line in order.lines) Text('${line.name} × ${line.quantity} · ${formatIdr(line.lineTotalIdr)}'),
+          for (final line in order.lines)
+            Text(
+              '${line.name} × ${line.quantity} · ${formatIdr(line.lineTotalIdr)}',
+            ),
           const SizedBox(height: 16),
           OutlinedButton(
             onPressed: () {

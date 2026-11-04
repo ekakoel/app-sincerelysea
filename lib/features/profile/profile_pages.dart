@@ -27,11 +27,18 @@ class ProfilePage extends StatelessWidget {
             children: [
               const BrandWordmark(width: 160),
               const Spacer(),
-              Text('Your profile', style: Theme.of(context).textTheme.headlineMedium),
+              Text(
+                'Your profile',
+                style: Theme.of(context).textTheme.headlineMedium,
+              ),
               const SizedBox(height: 8),
               const Text('Sign in to post, order, and keep a collection.'),
               const SizedBox(height: 16),
-              AppButton(key: const Key('sign-in-cta'), label: 'Sign in', onPressed: () => openLogin(context)),
+              AppButton(
+                key: const Key('sign-in-cta'),
+                label: 'Sign in',
+                onPressed: () => openLogin(context),
+              ),
               const SizedBox(height: 8),
               OutlinedButton(
                 onPressed: () => Navigator.of(context).push(
@@ -58,29 +65,41 @@ class ProfilePage extends StatelessWidget {
             children: [
               CircleAvatar(
                 radius: 28,
-                backgroundImage: user.avatarAsset == null ? null : AssetImage(user.avatarAsset!),
+                backgroundImage: user.avatarAsset == null
+                    ? null
+                    : AssetImage(user.avatarAsset!),
               ),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(user.displayName, style: Theme.of(context).textTheme.titleLarge),
+                    Text(
+                      user.displayName,
+                      style: Theme.of(context).textTheme.titleLarge,
+                    ),
                     Text('@${user.username} · ${user.city}'),
                   ],
                 ),
               ),
             ],
           ),
-          if (user.bio.isNotEmpty) ...[const SizedBox(height: 8), Text(user.bio)],
+          if (user.bio.isNotEmpty) ...[
+            const SizedBox(height: 8),
+            Text(user.bio),
+          ],
           const SizedBox(height: 8),
-          Text('$posts stories · $owned verified · joined ${user.joinedAt.year}'),
+          Text(
+            '$posts stories · $owned verified · joined ${user.joinedAt.year}',
+          ),
           if (!user.emailVerified) ...[
             const SizedBox(height: 8),
             const Text('Email is not verified.'),
             TextButton(
               onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => const VerifyEmailPage()),
+                MaterialPageRoute<void>(
+                  builder: (_) => const VerifyEmailPage(),
+                ),
               ),
               child: const Text('Enter verification code'),
             ),
@@ -88,35 +107,51 @@ class ProfilePage extends StatelessWidget {
           const Divider(),
           AppListTile(
             title: 'Edit profile',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const EditProfilePage())),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const EditProfilePage()),
+            ),
           ),
           AppListTile(
             title: 'Saved posts',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const SavedPostsPage())),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const SavedPostsPage()),
+            ),
           ),
           AppListTile(
             title: 'Wishlist',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const WishlistPage())),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const WishlistPage()),
+            ),
           ),
           AppListTile(
             title: 'Orders',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const OrdersPage())),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute<void>(builder: (_) => const OrdersPage())),
           ),
           AppListTile(title: 'Messages', onTap: () => openMessages(context)),
           AppListTile(
             title: 'Notifications',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const NotificationPage())),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const NotificationPage()),
+            ),
           ),
           AppListTile(
             title: 'Settings',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const SettingsPage())),
+            onTap: () => Navigator.of(context).push(
+              MaterialPageRoute<void>(builder: (_) => const SettingsPage()),
+            ),
           ),
           AppListTile(
             title: 'Administration',
-            onTap: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const AdminPage())),
+            onTap: () => Navigator.of(
+              context,
+            ).push(MaterialPageRoute<void>(builder: (_) => const AdminPage())),
           ),
           const SizedBox(height: 8),
-          Text('Loyalty balance ${store.loyaltyBalance(user.id)}. Redemption rules are not defined.'),
+          Text(
+            'Loyalty balance ${store.loyaltyBalance(user.id)}. Redemption rules are not defined.',
+          ),
           const SizedBox(height: 8),
           OutlinedButton(
             onPressed: () => runStore(context, () => store.redeemPoints(10)),
@@ -124,15 +159,23 @@ class ProfilePage extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           Text('Gift requests', style: Theme.of(context).textTheme.titleMedium),
-          for (final gift in store.gifts.where((gift) => gift.toUserId == user.id))
+          for (final gift in store.gifts.where(
+            (gift) => gift.toUserId == user.id,
+          ))
             AppListTile(
               title: gift.id,
               subtitle: gift.status,
               onTap: gift.status == 'pending'
                   ? () {
-                      final ok = runStore(context, () => store.acceptGift(gift.id));
+                      final ok = runStore(
+                        context,
+                        () => store.acceptGift(gift.id),
+                      );
                       if (ok && context.mounted) {
-                        showAppFeedback(context, 'Accepted for server review. Ownership did not move.');
+                        showAppFeedback(
+                          context,
+                          'Accepted for server review. Ownership did not move.',
+                        );
                       }
                     }
                   : null,
@@ -191,7 +234,10 @@ class _EditProfilePageState extends State<EditProfilePage> {
           DropdownButtonFormField<String>(
             initialValue: _city,
             decoration: const InputDecoration(labelText: 'City'),
-            items: [for (final city in brandCities) DropdownMenuItem(value: city, child: Text(city))],
+            items: [
+              for (final city in brandCities)
+                DropdownMenuItem(value: city, child: Text(city)),
+            ],
             onChanged: (value) => setState(() => _city = value ?? _city),
           ),
           const SizedBox(height: 16),
@@ -225,19 +271,28 @@ class OrdersPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final store = context.watch<LocalAppStore>();
     final user = store.session;
-    final orders = user == null ? const <CustomerOrder>[] : store.orders.where((order) => order.userId == user.id).toList();
+    final orders = user == null
+        ? const <CustomerOrder>[]
+        : store.orders.where((order) => order.userId == user.id).toList();
     return Scaffold(
       appBar: AppBar(title: const Text('Orders')),
       body: orders.isEmpty
-          ? const AppEmptyState(title: 'No orders', body: 'Pre-orders you place will stay here.')
+          ? const AppEmptyState(
+              title: 'No orders',
+              body: 'Pre-orders you place will stay here.',
+            )
           : ListView(
               children: [
                 for (final order in orders.reversed)
                   ListTile(
                     title: Text(order.id),
-                    subtitle: Text('${orderStatusLabel(order.status)} · ${formatIdr(order.subtotalIdr)}'),
+                    subtitle: Text(
+                      '${orderStatusLabel(order.status)} · ${formatIdr(order.subtotalIdr)}',
+                    ),
                     onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(builder: (_) => OrderDetailPage(orderId: order.id)),
+                      MaterialPageRoute<void>(
+                        builder: (_) => OrderDetailPage(orderId: order.id),
+                      ),
                     ),
                   ),
               ],
@@ -274,7 +329,9 @@ class SettingsPage extends StatelessWidget {
           AppListTile(
             title: 'Reset password',
             onTap: () => Navigator.of(context).push(
-              MaterialPageRoute<void>(builder: (_) => const ForgotPasswordPage()),
+              MaterialPageRoute<void>(
+                builder: (_) => const ForgotPasswordPage(),
+              ),
             ),
           ),
           AppListTile(
@@ -291,10 +348,18 @@ class SettingsPage extends StatelessWidget {
                 context: context,
                 builder: (context) => AlertDialog(
                   title: const Text('Delete account'),
-                  content: const Text('This removes the local account. It cannot grant or keep administrator access.'),
+                  content: const Text(
+                    'This removes the local account. It cannot grant or keep administrator access.',
+                  ),
                   actions: [
-                    TextButton(onPressed: () => Navigator.pop(context, false), child: const Text('Cancel')),
-                    TextButton(onPressed: () => Navigator.pop(context, true), child: const Text('Delete')),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, false),
+                      child: const Text('Cancel'),
+                    ),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context, true),
+                      child: const Text('Delete'),
+                    ),
                   ],
                 ),
               );

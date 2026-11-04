@@ -51,7 +51,10 @@ void main() {
   });
 
   test('captions stop at 15 characters and places stay at city level', () {
-    expect(captionPreview('Jane, on the way to the studio'), 'Jane, on the...read more');
+    expect(
+      captionPreview('Jane, on the way to the studio'),
+      'Jane, on the...read more',
+    );
     expect(captionPreview('Short line'), 'Short line');
     expect(PublicPlace('Denpasar').isCityLevel, isTrue);
     expect(PublicPlace('Denpasar, -8.65').isCityLevel, isFalse);

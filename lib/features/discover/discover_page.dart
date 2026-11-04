@@ -51,17 +51,21 @@ class _DiscoverPageState extends State<DiscoverPage> {
           if (posts.isEmpty)
             const AppEmptyState(
               title: 'No stories in this city',
-              body: 'When a member shares this city, the post will appear here.',
+              body:
+                  'When a member shares this city, the post will appear here.',
             )
           else
             for (final post in posts)
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: AppListTile(
-                  title: '${store.userById(post.authorId)?.displayName ?? 'Member'} · ${post.city}',
+                  title:
+                      '${store.userById(post.authorId)?.displayName ?? 'Member'} · ${post.city}',
                   subtitle: captionPreview(post.caption),
                   onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (_) => PostDetailPage(postId: post.id)),
+                    MaterialPageRoute<void>(
+                      builder: (_) => PostDetailPage(postId: post.id),
+                    ),
                   ),
                 ),
               ),

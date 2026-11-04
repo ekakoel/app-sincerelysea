@@ -16,7 +16,10 @@ class AppThemeBridge {
 }
 
 class AppGate extends StatefulWidget {
-  const AppGate({super.key, this.splashDuration = const Duration(milliseconds: 1200)});
+  const AppGate({
+    super.key,
+    this.splashDuration = const Duration(milliseconds: 1200),
+  });
 
   final Duration splashDuration;
 
@@ -158,7 +161,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        Text(page.title, style: Theme.of(context).textTheme.titleLarge),
+                        Text(
+                          page.title,
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
                         const SizedBox(height: 8),
                         Text(page.body),
                       ],
@@ -171,7 +177,10 @@ class _OnboardingPageState extends State<OnboardingPage> {
               padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
               child: Row(
                 children: [
-                  Text('${_index + 1} / ${_pages.length}', style: Theme.of(context).textTheme.bodySmall),
+                  Text(
+                    '${_index + 1} / ${_pages.length}',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
                   const Spacer(),
                   if (_index > 0)
                     TextButton(
@@ -186,9 +195,9 @@ class _OnboardingPageState extends State<OnboardingPage> {
                     onPressed: last
                         ? _finish
                         : () => _controller.nextPage(
-                              duration: const Duration(milliseconds: 240),
-                              curve: Curves.easeOut,
-                            ),
+                            duration: const Duration(milliseconds: 240),
+                            curve: Curves.easeOut,
+                          ),
                     child: Text(last ? 'Get started' : 'Next'),
                   ),
                 ],
@@ -226,15 +235,31 @@ class _CustomerShellState extends State<CustomerShell> {
         selectedIndex: _index,
         onDestinationSelected: (value) => setState(() => _index = value),
         destinations: const [
-          NavigationDestination(icon: Icon(Icons.home_outlined), selectedIcon: Icon(Icons.home), label: 'Home'),
-          NavigationDestination(icon: Icon(Icons.place_outlined), selectedIcon: Icon(Icons.place), label: 'Discover'),
-          NavigationDestination(icon: Icon(Icons.shopping_bag_outlined), selectedIcon: Icon(Icons.shopping_bag), label: 'Shop'),
+          NavigationDestination(
+            icon: Icon(Icons.home_outlined),
+            selectedIcon: Icon(Icons.home),
+            label: 'Home',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.place_outlined),
+            selectedIcon: Icon(Icons.place),
+            label: 'Discover',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.shopping_bag_outlined),
+            selectedIcon: Icon(Icons.shopping_bag),
+            label: 'Shop',
+          ),
           NavigationDestination(
             icon: Icon(Icons.inventory_2_outlined),
             selectedIcon: Icon(Icons.inventory_2),
             label: 'Collection',
           ),
-          NavigationDestination(icon: Icon(Icons.person_outline), selectedIcon: Icon(Icons.person), label: 'Profile'),
+          NavigationDestination(
+            icon: Icon(Icons.person_outline),
+            selectedIcon: Icon(Icons.person),
+            label: 'Profile',
+          ),
         ],
       ),
     );

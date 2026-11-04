@@ -18,7 +18,10 @@ void main() {
 
   test('likes are unique and another member cannot delete a comment', () {
     final store = LocalAppStore();
-    store.login(email: LocalAppStore.fixtureEmail, password: LocalAppStore.fixturePassword);
+    store.login(
+      email: LocalAppStore.fixtureEmail,
+      password: LocalAppStore.fixturePassword,
+    );
     store.toggleLike('post-mira');
     store.toggleLike('post-mira');
     store.toggleLike('post-mira');
@@ -26,13 +29,19 @@ void main() {
     final comment = store.addComment('post-mira', 'The edge is clean.');
     store.logout();
     store.login(email: 'mira@sincerelysea.dev', password: 'not-a-login');
-    expect(() => store.deleteOwnComment(comment.id), throwsA(isA<StoreException>()));
+    expect(
+      () => store.deleteOwnComment(comment.id),
+      throwsA(isA<StoreException>()),
+    );
     expect(store.commentCount('post-mira'), 1);
   });
 
   test('orders ignore a forged total and cannot be marked paid', () {
     final store = LocalAppStore();
-    store.login(email: LocalAppStore.fixtureEmail, password: LocalAppStore.fixturePassword);
+    store.login(
+      email: LocalAppStore.fixtureEmail,
+      password: LocalAppStore.fixturePassword,
+    );
     store.addToCart('viola-sling');
     final order = store.placeOrder(shipTo: 'Denpasar', clientSubtotalIdr: 1);
     expect(order.subtotalIdr, 830000);
@@ -44,17 +53,34 @@ void main() {
 
   test('self verification and client transfer do not change ownership', () {
     final store = LocalAppStore();
-    store.login(email: LocalAppStore.fixtureEmail, password: LocalAppStore.fixturePassword);
-    expect(() => store.requestSelfVerification('satchel'), throwsA(isA<StoreException>()));
-    expect(store.verifiedCollection('user-ayu').single.productId, 'jane-medium');
+    store.login(
+      email: LocalAppStore.fixtureEmail,
+      password: LocalAppStore.fixturePassword,
+    );
+    expect(
+      () => store.requestSelfVerification('satchel'),
+      throwsA(isA<StoreException>()),
+    );
+    expect(
+      store.verifiedCollection('user-ayu').single.productId,
+      'jane-medium',
+    );
     final gift = store.requestGift('own-ayu-jane', 'mira');
     expect(store.verifiedCollection('user-ayu').single.ownerId, 'user-ayu');
     store.logout();
     store.login(email: 'mira@sincerelysea.dev', password: 'not-a-login');
     store.acceptGift(gift.id);
     expect(gift.status, 'accepted_pending_server');
-    expect(store.ownership.singleWhere((record) => record.id == 'own-ayu-jane').ownerId, 'user-ayu');
-    expect(() => store.completeTransfer(gift.id), throwsA(isA<StoreException>()));
+    expect(
+      store.ownership
+          .singleWhere((record) => record.id == 'own-ayu-jane')
+          .ownerId,
+      'user-ayu',
+    );
+    expect(
+      () => store.completeTransfer(gift.id),
+      throwsA(isA<StoreException>()),
+    );
   });
 
   test('private conversations and precise places are refused', () {
@@ -66,47 +92,77 @@ void main() {
       throwsA(isA<StoreException>()),
     );
     expect(
-      () => store.publishPost(imageAsset: 'assets/photos/bali.jpg', caption: 'A precise pin', city: 'Denpasar, -8.6'),
+      () => store.publishPost(
+        imageAsset: 'assets/photos/bali.jpg',
+        caption: 'A precise pin',
+        city: 'Denpasar, -8.6',
+      ),
       throwsA(isA<StoreException>()),
     );
   });
 
   test('moderation and loyalty stay closed', () {
     final store = LocalAppStore();
-    store.login(email: LocalAppStore.fixtureEmail, password: LocalAppStore.fixturePassword);
-    expect(() => store.moderateRemovePost('post-mira'), throwsA(isA<StoreException>()));
+    store.login(
+      email: LocalAppStore.fixtureEmail,
+      password: LocalAppStore.fixturePassword,
+    );
+    expect(
+      () => store.moderateRemovePost('post-mira'),
+      throwsA(isA<StoreException>()),
+    );
     expect(store.posts.any((post) => post.id == 'post-mira'), isTrue);
     expect(store.loyaltyBalance('user-ayu'), 0);
     expect(() => store.redeemPoints(10), throwsA(isA<StoreException>()));
   });
 
-  test('a blocked member cannot receive a message and a reset replaces the hash', () {
-    final store = LocalAppStore();
-    store.login(email: LocalAppStore.fixtureEmail, password: LocalAppStore.fixturePassword);
-    store.blockUser('user-mira');
-    expect(
-      () => store.sendMessage('conv-ayu-mira', 'still there?'),
-      throwsA(isA<StoreException>()),
-    );
-    store.requestPasswordReset(LocalAppStore.fixtureEmail);
-    store.completePasswordReset(code: '392817', newPassword: 'next-password');
-    store.logout();
-    expect(
-      () => store.login(email: LocalAppStore.fixtureEmail, password: LocalAppStore.fixturePassword),
-      throwsA(isA<StoreException>()),
-    );
-    store.login(email: LocalAppStore.fixtureEmail, password: 'next-password');
-    expect(store.session?.id, 'user-ayu');
-  });
+  test(
+    'a blocked member cannot receive a message and a reset replaces the hash',
+    () {
+      final store = LocalAppStore();
+      store.login(
+        email: LocalAppStore.fixtureEmail,
+        password: LocalAppStore.fixturePassword,
+      );
+      store.blockUser('user-mira');
+      expect(
+        () => store.sendMessage('conv-ayu-mira', 'still there?'),
+        throwsA(isA<StoreException>()),
+      );
+      store.requestPasswordReset(LocalAppStore.fixtureEmail);
+      store.completePasswordReset(code: '392817', newPassword: 'next-password');
+      store.logout();
+      expect(
+        () => store.login(
+          email: LocalAppStore.fixtureEmail,
+          password: LocalAppStore.fixturePassword,
+        ),
+        throwsA(isA<StoreException>()),
+      );
+      store.login(email: LocalAppStore.fixtureEmail, password: 'next-password');
+      expect(store.session?.id, 'user-ayu');
+    },
+  );
 
   test('resale interest does not move the verified owner', () {
     final store = LocalAppStore();
-    store.login(email: LocalAppStore.fixtureEmail, password: LocalAppStore.fixturePassword);
-    final listing = store.listForResale('own-ayu-jane', 'Open to the community');
+    store.login(
+      email: LocalAppStore.fixtureEmail,
+      password: LocalAppStore.fixturePassword,
+    );
+    final listing = store.listForResale(
+      'own-ayu-jane',
+      'Open to the community',
+    );
     store.logout();
     store.login(email: 'mira@sincerelysea.dev', password: 'not-a-login');
     store.expressResaleInterest(listing.id);
-    expect(store.ownership.singleWhere((record) => record.id == 'own-ayu-jane').ownerId, 'user-ayu');
+    expect(
+      store.ownership
+          .singleWhere((record) => record.id == 'own-ayu-jane')
+          .ownerId,
+      'user-ayu',
+    );
     expect(listing.status, 'open');
   });
 }

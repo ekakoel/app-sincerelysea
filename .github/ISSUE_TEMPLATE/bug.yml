@@ -1,0 +1,30 @@
+name: Cacat
+description: Perilaku yang salah pada aplikasi SincerelySea
+title: "[Bug] "
+labels: ["bug"]
+body:
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Yang terjadi
+      description: Tuliskan langkah, hasil yang diharapkan, dan hasil yang terlihat.
+    validations:
+      required: true
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Area
+      options:
+        - Android
+        - iOS
+        - Keduanya
+        - Belum dicoba di perangkat
+    validations:
+      required: true
+  - type: textarea
+    id: version
+    attributes:
+      label: Versi
+      description: Commit, versi aplikasi, dan versi Flutter jika diketahui.
+    validations:
+      required: false

@@ -9,7 +9,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final store = LocalAppStore();
   final preferences = await SharedPreferences.getInstance();
-  store.onboardingComplete = preferences.getBool('onboarding_complete') ?? false;
+  store.onboardingComplete =
+      preferences.getBool('onboarding_complete') ?? false;
   store.darkMode = preferences.getBool('dark_mode') ?? false;
   store.addListener(() {
     preferences.setBool('onboarding_complete', store.onboardingComplete);

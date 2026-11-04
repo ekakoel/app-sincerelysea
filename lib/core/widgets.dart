@@ -31,7 +31,11 @@ class AppPage extends StatelessWidget {
 }
 
 class AppCard extends StatelessWidget {
-  const AppCard({super.key, required this.child, this.padding = const EdgeInsets.all(16)});
+  const AppCard({
+    super.key,
+    required this.child,
+    this.padding = const EdgeInsets.all(16),
+  });
 
   final Widget child;
   final EdgeInsets padding;
@@ -170,9 +174,17 @@ class AppEmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(title, style: Theme.of(context).textTheme.titleMedium, textAlign: TextAlign.center),
+            Text(
+              title,
+              style: Theme.of(context).textTheme.titleMedium,
+              textAlign: TextAlign.center,
+            ),
             const SizedBox(height: 8),
-            Text(body, textAlign: TextAlign.center, style: Theme.of(context).textTheme.bodySmall),
+            Text(
+              body,
+              textAlign: TextAlign.center,
+              style: Theme.of(context).textTheme.bodySmall,
+            ),
           ],
         ),
       ),
@@ -181,7 +193,11 @@ class AppEmptyState extends StatelessWidget {
 }
 
 class AppErrorState extends StatelessWidget {
-  const AppErrorState({super.key, required this.message, required this.onRetry});
+  const AppErrorState({
+    super.key,
+    required this.message,
+    required this.onRetry,
+  });
 
   final String message;
   final VoidCallback onRetry;
@@ -287,7 +303,12 @@ class BrandIcon extends StatelessWidget {
 }
 
 class PhotoFrame extends StatelessWidget {
-  const PhotoFrame({super.key, required this.asset, this.height = 180, this.radius = 12});
+  const PhotoFrame({
+    super.key,
+    required this.asset,
+    this.height = 180,
+    this.radius = 12,
+  });
 
   final String asset;
   final double height;
@@ -302,10 +323,8 @@ class PhotoFrame extends StatelessWidget {
         height: height,
         width: double.infinity,
         fit: BoxFit.cover,
-        errorBuilder: (_, _, _) => Container(
-          height: height,
-          color: AppColors.gray100,
-        ),
+        errorBuilder: (_, _, _) =>
+            Container(height: height, color: AppColors.gray100),
       ),
     );
   }

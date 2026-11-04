@@ -33,10 +33,14 @@ class CollectionPage extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.only(bottom: 12),
                 child: AppListTile(
-                  title: store.catalog[record.productId]?.name ?? record.productId,
-                  subtitle: 'Verified · ${record.source.name} · ${record.orderId ?? 'no order'}',
+                  title:
+                      store.catalog[record.productId]?.name ?? record.productId,
+                  subtitle:
+                      'Verified · ${record.source.name} · ${record.orderId ?? 'no order'}',
                   onTap: () => Navigator.of(context).push(
-                    MaterialPageRoute<void>(builder: (_) => OwnershipPage(ownershipId: record.id)),
+                    MaterialPageRoute<void>(
+                      builder: (_) => OwnershipPage(ownershipId: record.id),
+                    ),
                   ),
                 ),
               ),
@@ -47,7 +51,10 @@ class CollectionPage extends StatelessWidget {
               ),
             const SizedBox(height: 8),
             OutlinedButton(
-              onPressed: () => runStore(context, () => store.requestSelfVerification('jane-medium')),
+              onPressed: () => runStore(
+                context,
+                () => store.requestSelfVerification('jane-medium'),
+              ),
               child: const Text('I own this already'),
             ),
           ],
@@ -81,25 +88,34 @@ class _OwnershipPageState extends State<OwnershipPage> {
   Widget build(BuildContext context) {
     final store = context.watch<LocalAppStore>();
     final record = store.ownership.cast<OwnershipRecord?>().firstWhere(
-          (item) => item!.id == widget.ownershipId,
-          orElse: () => null,
-        );
+      (item) => item!.id == widget.ownershipId,
+      orElse: () => null,
+    );
     if (record == null || store.session?.id != record.ownerId) {
       return Scaffold(
         appBar: AppBar(),
-        body: const AppEmptyState(title: 'Private record', body: 'This ownership record is not yours.'),
+        body: const AppEmptyState(
+          title: 'Private record',
+          body: 'This ownership record is not yours.',
+        ),
       );
     }
     final product = store.catalog[record.productId];
-    final gifts = store.gifts.where((gift) => gift.ownershipId == record.id).toList();
+    final gifts = store.gifts
+        .where((gift) => gift.ownershipId == record.id)
+        .toList();
     return Scaffold(
       appBar: AppBar(title: const Text('Ownership')),
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          if (product != null) PhotoFrame(asset: product.imageAsset, height: 200),
+          if (product != null)
+            PhotoFrame(asset: product.imageAsset, height: 200),
           const SizedBox(height: 12),
-          Text(product?.name ?? record.productId, style: Theme.of(context).textTheme.titleLarge),
+          Text(
+            product?.name ?? record.productId,
+            style: Theme.of(context).textTheme.titleLarge,
+          ),
           Text('Status · ${record.status.name}'),
           Text('Source · ${record.source.name}'),
           Text('Since · ${record.since.toIso8601String().split('T').first}'),
@@ -108,20 +124,30 @@ class _OwnershipPageState extends State<OwnershipPage> {
               title: record.orderId!,
               subtitle: 'Eligible purchase',
               onTap: () => Navigator.of(context).push(
-                MaterialPageRoute<void>(builder: (_) => OrderDetailPage(orderId: record.orderId!)),
+                MaterialPageRoute<void>(
+                  builder: (_) => OrderDetailPage(orderId: record.orderId!),
+                ),
               ),
             ),
           const SizedBox(height: 8),
-          const Text('Resale and gifting record interest only. They do not move ownership.'),
+          const Text(
+            'Resale and gifting record interest only. They do not move ownership.',
+          ),
           const SizedBox(height: 12),
           AppTextField(label: 'Listing note', controller: _note),
           const SizedBox(height: 8),
           AppButton(
             label: 'List for resale',
             onPressed: () {
-              final ok = runStore(context, () => store.listForResale(record.id, _note.text));
+              final ok = runStore(
+                context,
+                () => store.listForResale(record.id, _note.text),
+              );
               if (ok && context.mounted) {
-                showAppFeedback(context, 'Listing opened. You are still the verified owner.');
+                showAppFeedback(
+                  context,
+                  'Listing opened. You are still the verified owner.',
+                );
               }
             },
           ),
@@ -131,16 +157,27 @@ class _OwnershipPageState extends State<OwnershipPage> {
           AppButton(
             label: 'Send gift request',
             onPressed: () {
-              final ok = runStore(context, () => store.requestGift(record.id, _recipient.text));
+              final ok = runStore(
+                context,
+                () => store.requestGift(record.id, _recipient.text),
+              );
               if (ok && context.mounted) {
-                showAppFeedback(context, 'Request sent. Ownership is unchanged.');
+                showAppFeedback(
+                  context,
+                  'Request sent. Ownership is unchanged.',
+                );
               }
             },
           ),
           for (final gift in gifts) Text('${gift.id} · ${gift.status}'),
           const SizedBox(height: 12),
           OutlinedButton(
-            onPressed: () => runStore(context, () => store.completeTransfer(gifts.isEmpty ? record.id : gifts.first.id)),
+            onPressed: () => runStore(
+              context,
+              () => store.completeTransfer(
+                gifts.isEmpty ? record.id : gifts.first.id,
+              ),
+            ),
             child: const Text('Complete transfer'),
           ),
         ],

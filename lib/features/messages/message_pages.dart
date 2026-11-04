@@ -26,15 +26,25 @@ class MessagesPage extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(title: const Text('Messages')),
       body: conversations.isEmpty
-          ? const AppEmptyState(title: 'No conversations', body: 'Messages from members you can reach will appear here.')
+          ? const AppEmptyState(
+              title: 'No conversations',
+              body: 'Messages from members you can reach will appear here.',
+            )
           : ListView(
               children: [
                 for (final conversation in conversations)
                   ListTile(
                     title: Text(_title(store, conversation, user.id)),
-                    subtitle: Text(conversation.messages.isEmpty ? 'No messages' : conversation.messages.last.body),
+                    subtitle: Text(
+                      conversation.messages.isEmpty
+                          ? 'No messages'
+                          : conversation.messages.last.body,
+                    ),
                     onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(builder: (_) => ThreadPage(conversationId: conversation.id)),
+                      MaterialPageRoute<void>(
+                        builder: (_) =>
+                            ThreadPage(conversationId: conversation.id),
+                      ),
                     ),
                   ),
               ],
@@ -73,23 +83,36 @@ class _ThreadPageState extends State<ThreadPage> {
     final store = context.watch<LocalAppStore>();
     final user = store.session;
     final conversation = store.conversations.cast<Conversation?>().firstWhere(
-          (item) => item!.id == widget.conversationId,
-          orElse: () => null,
-        );
-    if (user == null || conversation == null || !conversation.participantIds.contains(user.id)) {
+      (item) => item!.id == widget.conversationId,
+      orElse: () => null,
+    );
+    if (user == null ||
+        conversation == null ||
+        !conversation.participantIds.contains(user.id)) {
       return Scaffold(
         appBar: AppBar(),
-        body: const AppEmptyState(title: 'Private', body: 'This conversation is not available to you.'),
+        body: const AppEmptyState(
+          title: 'Private',
+          body: 'This conversation is not available to you.',
+        ),
       );
     }
     if (!_marked) {
       _marked = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        runStore(context, () => context.read<LocalAppStore>().markConversationRead(widget.conversationId));
+        runStore(
+          context,
+          () => context.read<LocalAppStore>().markConversationRead(
+            widget.conversationId,
+          ),
+        );
       });
     }
-    final otherId = conversation.participantIds.firstWhere((id) => id != user.id, orElse: () => user.id);
+    final otherId = conversation.participantIds.firstWhere(
+      (id) => id != user.id,
+      orElse: () => user.id,
+    );
     return Scaffold(
       appBar: AppBar(
         title: Text(store.userById(otherId)?.displayName ?? 'Message'),
@@ -99,7 +122,9 @@ class _ThreadPageState extends State<ThreadPage> {
               tooltip: 'Block',
               onPressed: () {
                 final ok = runStore(context, () => store.blockUser(otherId));
-                if (ok && context.mounted) showAppFeedback(context, 'Member blocked.');
+                if (ok && context.mounted) {
+                  showAppFeedback(context, 'Member blocked.');
+                }
               },
               icon: const Icon(Icons.block),
             ),
@@ -113,7 +138,9 @@ class _ThreadPageState extends State<ThreadPage> {
               children: [
                 for (final message in conversation.messages)
                   Align(
-                    alignment: message.senderId == user.id ? Alignment.centerRight : Alignment.centerLeft,
+                    alignment: message.senderId == user.id
+                        ? Alignment.centerRight
+                        : Alignment.centerLeft,
                     child: Padding(
                       padding: const EdgeInsets.only(bottom: 8),
                       child: AppCard(
@@ -137,11 +164,16 @@ class _ThreadPageState extends State<ThreadPage> {
             padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
             child: Row(
               children: [
-                Expanded(child: AppTextField(label: 'Message', controller: _body)),
+                Expanded(
+                  child: AppTextField(label: 'Message', controller: _body),
+                ),
                 const SizedBox(width: 8),
                 IconButton(
                   onPressed: () {
-                    final ok = runStore(context, () => store.sendMessage(conversation.id, _body.text));
+                    final ok = runStore(
+                      context,
+                      () => store.sendMessage(conversation.id, _body.text),
+                    );
                     if (ok) _body.clear();
                   },
                   icon: const Icon(Icons.send),
@@ -160,5 +192,6 @@ void openMessages(BuildContext context) {
     openLogin(context);
     return;
   }
-  Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const MessagesPage()));
+  Navigator.of(context)
+      .push(MaterialPageRoute<void>(builder: (_) => const MessagesPage()));
 }

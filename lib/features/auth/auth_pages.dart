@@ -6,7 +6,8 @@ import '../../core/widgets.dart';
 import '../../data/local_store.dart';
 
 void openLogin(BuildContext context) {
-  Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const LoginPage()));
+  Navigator.of(context)
+      .push(MaterialPageRoute<void>(builder: (_) => const LoginPage()));
 }
 
 class LoginPage extends StatefulWidget {
@@ -29,13 +30,19 @@ class _LoginPageState extends State<LoginPage> {
 
   void _submit() {
     final ok = runStore(context, () {
-      context.read<LocalAppStore>().login(email: _email.text, password: _password.text);
+      context.read<LocalAppStore>().login(
+        email: _email.text,
+        password: _password.text,
+      );
     });
     if (ok && mounted) Navigator.of(context).pop();
   }
 
   void _providerUnavailable(String provider) {
-    showAppFeedback(context, '$provider is not completed. ${FirebaseGate.status}');
+    showAppFeedback(
+      context,
+      '$provider is not completed. ${FirebaseGate.status}',
+    );
   }
 
   @override
@@ -52,7 +59,11 @@ class _LoginPageState extends State<LoginPage> {
             style: Theme.of(context).textTheme.bodySmall,
           ),
           const SizedBox(height: 20),
-          AppTextField(label: 'Email', controller: _email, fieldKey: const Key('email')),
+          AppTextField(
+            label: 'Email',
+            controller: _email,
+            fieldKey: const Key('email'),
+          ),
           const SizedBox(height: 12),
           AppTextField(
             label: 'Password',
@@ -61,16 +72,26 @@ class _LoginPageState extends State<LoginPage> {
             fieldKey: const Key('password'),
           ),
           const SizedBox(height: 16),
-          AppButton(key: const Key('sign-in'), label: 'Sign in', onPressed: _submit),
+          AppButton(
+            key: const Key('sign-in'),
+            label: 'Sign in',
+            onPressed: _submit,
+          ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const ForgotPasswordPage()));
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const ForgotPasswordPage(),
+                ),
+              );
             },
             child: const Text('Forgot password'),
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const RegisterPage()));
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(builder: (_) => const RegisterPage()),
+              );
             },
             child: const Text('Create an account'),
           ),
@@ -115,14 +136,16 @@ class _RegisterPageState extends State<RegisterPage> {
   void _submit() {
     final ok = runStore(context, () {
       context.read<LocalAppStore>().register(
-            email: _email.text,
-            password: _password.text,
-            displayName: _name.text,
-            username: _username.text,
-          );
+        email: _email.text,
+        password: _password.text,
+        displayName: _name.text,
+        username: _username.text,
+      );
     });
     if (!ok || !mounted) return;
-    Navigator.of(context).pushReplacement(MaterialPageRoute<void>(builder: (_) => const VerifyEmailPage()));
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute<void>(builder: (_) => const VerifyEmailPage()),
+    );
   }
 
   @override
@@ -189,7 +212,10 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
           AppButton(
             label: 'Request code',
             onPressed: () {
-              final ok = runStore(context, () => store.requestPasswordReset(_email.text));
+              final ok = runStore(
+                context,
+                () => store.requestPasswordReset(_email.text),
+              );
               if (ok) setState(() => _requested = true);
             },
           ),
@@ -199,16 +225,26 @@ class _ForgotPasswordPageState extends State<ForgotPasswordPage> {
             const SizedBox(height: 12),
             AppTextField(label: 'Code', controller: _code),
             const SizedBox(height: 12),
-            AppTextField(label: 'New password', controller: _password, obscure: true),
+            AppTextField(
+              label: 'New password',
+              controller: _password,
+              obscure: true,
+            ),
             const SizedBox(height: 12),
             AppButton(
               label: 'Update password',
               onPressed: () {
                 final ok = runStore(context, () {
-                  store.completePasswordReset(code: _code.text, newPassword: _password.text);
+                  store.completePasswordReset(
+                    code: _code.text,
+                    newPassword: _password.text,
+                  );
                 });
                 if (ok && mounted) {
-                  showAppFeedback(context, 'Password updated. Sign in with the new password.');
+                  showAppFeedback(
+                    context,
+                    'Password updated. Sign in with the new password.',
+                  );
                   Navigator.of(context).pop();
                 }
               },
@@ -252,12 +288,19 @@ class _VerifyEmailPageState extends State<VerifyEmailPage> {
           const SizedBox(height: 12),
           Text('Code: ${store.pendingVerificationCode ?? '—'}'),
           const SizedBox(height: 12),
-          AppTextField(label: 'Verification code', controller: _code, fieldKey: const Key('verify-code')),
+          AppTextField(
+            label: 'Verification code',
+            controller: _code,
+            fieldKey: const Key('verify-code'),
+          ),
           const SizedBox(height: 12),
           AppButton(
             label: 'Confirm email',
             onPressed: () {
-              final ok = runStore(context, () => store.confirmEmail(_code.text));
+              final ok = runStore(
+                context,
+                () => store.confirmEmail(_code.text),
+              );
               if (ok && context.mounted) Navigator.of(context).pop();
             },
           ),

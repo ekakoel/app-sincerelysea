@@ -6,7 +6,9 @@ import 'package:sincerelysea/main.dart';
 Future<void> _boot(WidgetTester tester, LocalAppStore store) async {
   store.markSplashSeen();
   store.completeOnboarding();
-  await tester.pumpWidget(SincerelySeaApp(store: store, splashDuration: Duration.zero));
+  await tester.pumpWidget(
+    SincerelySeaApp(store: store, splashDuration: Duration.zero),
+  );
   await tester.pump();
 }
 
@@ -14,7 +16,10 @@ void main() {
   testWidgets('splash yields to onboarding', (tester) async {
     final store = LocalAppStore();
     await tester.pumpWidget(
-      SincerelySeaApp(store: store, splashDuration: const Duration(milliseconds: 20)),
+      SincerelySeaApp(
+        store: store,
+        splashDuration: const Duration(milliseconds: 20),
+      ),
     );
     expect(find.text('Stories in every stitch'), findsOneWidget);
     await tester.pump(const Duration(milliseconds: 30));
@@ -25,7 +30,9 @@ void main() {
   testWidgets('skip opens the home feed with a short caption', (tester) async {
     final store = LocalAppStore();
     store.markSplashSeen();
-    await tester.pumpWidget(SincerelySeaApp(store: store, splashDuration: Duration.zero));
+    await tester.pumpWidget(
+      SincerelySeaApp(store: store, splashDuration: Duration.zero),
+    );
     await tester.pump();
     await tester.tap(find.text('Skip'));
     await tester.pump();
@@ -51,8 +58,14 @@ void main() {
     await tester.pump();
     await tester.tap(find.byKey(const Key('sign-in-cta')));
     await tester.pumpAndSettle();
-    await tester.enterText(find.byKey(const Key('email')), LocalAppStore.fixtureEmail);
-    await tester.enterText(find.byKey(const Key('password')), LocalAppStore.fixturePassword);
+    await tester.enterText(
+      find.byKey(const Key('email')),
+      LocalAppStore.fixtureEmail,
+    );
+    await tester.enterText(
+      find.byKey(const Key('password')),
+      LocalAppStore.fixturePassword,
+    );
     await tester.tap(find.byKey(const Key('sign-in')));
     await tester.pumpAndSettle();
     expect(find.text('Ayu Putri'), findsOneWidget);

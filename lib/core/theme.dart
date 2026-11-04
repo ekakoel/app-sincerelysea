@@ -47,17 +47,32 @@ class AppTheme {
         fillColor: dark ? AppColors.gray900 : AppColors.gray50,
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: dark ? AppColors.gray700 : AppColors.gray100),
+          borderSide: BorderSide(
+            color: dark ? AppColors.gray700 : AppColors.gray100,
+          ),
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: BorderSide(color: dark ? AppColors.gray700 : AppColors.gray100),
+          borderSide: BorderSide(
+            color: dark ? AppColors.gray700 : AppColors.gray100,
+          ),
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 14,
+          vertical: 14,
+        ),
       ),
       textTheme: const TextTheme(
-        headlineMedium: TextStyle(fontSize: 28, fontWeight: FontWeight.w600, letterSpacing: -0.4),
-        titleLarge: TextStyle(fontSize: 22, fontWeight: FontWeight.w600, letterSpacing: -0.3),
+        headlineMedium: TextStyle(
+          fontSize: 28,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.4,
+        ),
+        titleLarge: TextStyle(
+          fontSize: 22,
+          fontWeight: FontWeight.w600,
+          letterSpacing: -0.3,
+        ),
         titleMedium: TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         bodyMedium: TextStyle(fontSize: 14, height: 1.45),
         bodySmall: TextStyle(fontSize: 12, height: 1.35),

@@ -159,9 +159,8 @@ String captionPreview(String text, {int maxChars = 15}) {
   if (trimmed.length <= maxChars) return trimmed;
   var raw = trimmed.substring(0, maxChars);
   final next = trimmed[maxChars];
-  final cutMidWord = raw.isNotEmpty &&
-      _isWordChar(raw[raw.length - 1]) &&
-      _isWordChar(next);
+  final cutMidWord =
+      raw.isNotEmpty && _isWordChar(raw[raw.length - 1]) && _isWordChar(next);
   if (cutMidWord) {
     final space = raw.lastIndexOf(' ');
     if (space >= 8) raw = raw.substring(0, space);

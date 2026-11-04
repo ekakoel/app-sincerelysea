@@ -465,14 +465,16 @@ class LocalAppStore extends ChangeNotifier {
     );
   }
 
-  String _hash(String password) => sha256.convert(utf8.encode(password)).toString();
+  String _hash(String password) =>
+      sha256.convert(utf8.encode(password)).toString();
 
   String _id(String prefix) => '$prefix-${_seq++}';
 
   AppUser? userById(String id) => users[id];
 
   List<CommunityPost> feedPage({required int offset, int limit = 4}) {
-    final sorted = [...posts]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+    final sorted = [...posts]
+      ..sort((a, b) => b.createdAt.compareTo(a.createdAt));
     if (offset >= sorted.length) return const [];
     final end = offset + limit > sorted.length ? sorted.length : offset + limit;
     return sorted.sublist(offset, end);
@@ -487,9 +489,11 @@ class LocalAppStore extends ChangeNotifier {
   int commentCount(String postId) =>
       comments.where((comment) => comment.postId == postId).length;
 
-  bool likedBy(String userId, String postId) => likes.contains('$userId|$postId');
+  bool likedBy(String userId, String postId) =>
+      likes.contains('$userId|$postId');
 
-  bool savedBy(String userId, String postId) => saves.contains('$userId|$postId');
+  bool savedBy(String userId, String postId) =>
+      saves.contains('$userId|$postId');
 
   void register({
     required String email,
@@ -526,9 +530,9 @@ class LocalAppStore extends ChangeNotifier {
   void login({required String email, required String password}) {
     final normalized = email.trim().toLowerCase();
     final user = users.values.cast<AppUser?>().firstWhere(
-          (item) => item!.email == normalized,
-          orElse: () => null,
-        );
+      (item) => item!.email == normalized,
+      orElse: () => null,
+    );
     if (user == null || user.passwordHash != _hash(password)) {
       throw StoreException('Email or password is incorrect.');
     }
@@ -560,9 +564,9 @@ class LocalAppStore extends ChangeNotifier {
   void requestPasswordReset(String email) {
     final normalized = email.trim().toLowerCase();
     final user = users.values.cast<AppUser?>().firstWhere(
-          (item) => item!.email == normalized,
-          orElse: () => null,
-        );
+      (item) => item!.email == normalized,
+      orElse: () => null,
+    );
     if (user == null) {
       throw StoreException('No account uses that email.');
     }
@@ -589,7 +593,8 @@ class LocalAppStore extends ChangeNotifier {
 
   void confirmEmail(String code) {
     final user = _requireSession();
-    if (pendingVerificationCode == null || code.trim() != pendingVerificationCode) {
+    if (pendingVerificationCode == null ||
+        code.trim() != pendingVerificationCode) {
       throw StoreException('Verification code is not valid.');
     }
     user.emailVerified = true;
@@ -670,9 +675,9 @@ class LocalAppStore extends ChangeNotifier {
   void deleteOwnComment(String commentId) {
     final user = _requireSession();
     final comment = comments.cast<PostComment?>().firstWhere(
-          (item) => item!.id == commentId,
-          orElse: () => null,
-        );
+      (item) => item!.id == commentId,
+      orElse: () => null,
+    );
     if (comment == null) throw StoreException('Comment not found.');
     if (comment.authorId != user.id) {
       throw StoreException('You can only delete your own comment.');
@@ -745,9 +750,9 @@ class LocalAppStore extends ChangeNotifier {
     final user = _requireSession();
     final cart = carts.putIfAbsent(user.id, () => []);
     final existing = cart.cast<CartRequest?>().firstWhere(
-          (line) => line!.productId == productId,
-          orElse: () => null,
-        );
+      (line) => line!.productId == productId,
+      orElse: () => null,
+    );
     if (existing == null) {
       cart.add(CartRequest(productId: productId, quantity: 1));
     } else {
@@ -778,12 +783,10 @@ class LocalAppStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  List<CartRequest> cartFor(String userId) => List.unmodifiable(carts[userId] ?? const []);
+  List<CartRequest> cartFor(String userId) =>
+      List.unmodifiable(carts[userId] ?? const []);
 
-  CustomerOrder placeOrder({
-    required String shipTo,
-    int? clientSubtotalIdr,
-  }) {
+  CustomerOrder placeOrder({required String shipTo, int? clientSubtotalIdr}) {
     final user = _requireSession();
     if (!user.emailVerified) {
       throw StoreException('Verify your email before ordering.');
@@ -852,16 +855,17 @@ class LocalAppStore extends ChangeNotifier {
   void sendMessage(String conversationId, String body) {
     final user = _requireSession();
     final conversation = conversations.cast<Conversation?>().firstWhere(
-          (item) => item!.id == conversationId,
-          orElse: () => null,
-        );
-    if (conversation == null || !conversation.participantIds.contains(user.id)) {
+      (item) => item!.id == conversationId,
+      orElse: () => null,
+    );
+    if (conversation == null ||
+        !conversation.participantIds.contains(user.id)) {
       throw StoreException('That conversation is not available to you.');
     }
     final otherId = conversation.participantIds.cast<String?>().firstWhere(
-          (id) => id != user.id,
-          orElse: () => null,
-        );
+      (id) => id != user.id,
+      orElse: () => null,
+    );
     if (otherId != null && _blocked(user.id, otherId)) {
       throw StoreException('Messaging is unavailable for this member.');
     }
@@ -881,10 +885,11 @@ class LocalAppStore extends ChangeNotifier {
   void markConversationRead(String conversationId) {
     final user = _requireSession();
     final conversation = conversations.cast<Conversation?>().firstWhere(
-          (item) => item!.id == conversationId,
-          orElse: () => null,
-        );
-    if (conversation == null || !conversation.participantIds.contains(user.id)) {
+      (item) => item!.id == conversationId,
+      orElse: () => null,
+    );
+    if (conversation == null ||
+        !conversation.participantIds.contains(user.id)) {
       throw StoreException('That conversation is not available to you.');
     }
     for (final message in conversation.messages) {
@@ -934,9 +939,9 @@ class LocalAppStore extends ChangeNotifier {
 
   OwnershipRecord _ownedVerified(String ownershipId, String userId) {
     final record = ownership.cast<OwnershipRecord?>().firstWhere(
-          (item) => item!.id == ownershipId,
-          orElse: () => null,
-        );
+      (item) => item!.id == ownershipId,
+      orElse: () => null,
+    );
     if (record == null || record.ownerId != userId) {
       throw StoreException('That piece is not in your verified collection.');
     }
@@ -950,7 +955,8 @@ class LocalAppStore extends ChangeNotifier {
     final user = _requireSession();
     final record = _ownedVerified(ownershipId, user.id);
     final open = listings.any(
-      (listing) => listing.ownershipId == ownershipId && listing.status == 'open',
+      (listing) =>
+          listing.ownershipId == ownershipId && listing.status == 'open',
     );
     if (open) {
       throw StoreException('This piece already has an open listing.');
@@ -970,9 +976,9 @@ class LocalAppStore extends ChangeNotifier {
   void expressResaleInterest(String listingId) {
     final user = _requireSession();
     final listing = listings.cast<ResaleListing?>().firstWhere(
-          (item) => item!.id == listingId,
-          orElse: () => null,
-        );
+      (item) => item!.id == listingId,
+      orElse: () => null,
+    );
     if (listing == null || listing.status != 'open') {
       throw StoreException('That listing is not open.');
     }
@@ -980,14 +986,19 @@ class LocalAppStore extends ChangeNotifier {
       throw StoreException('You already hold this piece.');
     }
     interests.add(
-      ResaleInterest(id: _id('interest'), listingId: listing.id, buyerId: user.id),
+      ResaleInterest(
+        id: _id('interest'),
+        listingId: listing.id,
+        buyerId: user.id,
+      ),
     );
     notices.add(
       AppNotice(
         id: _id('note'),
         userId: listing.sellerId,
         title: 'Resale interest',
-        body: 'A member asked about listing ${listing.id}. Ownership is unchanged.',
+        body:
+            'A member asked about listing ${listing.id}. Ownership is unchanged.',
         createdAt: _clock(),
         targetType: 'listing',
         targetId: listing.id,
@@ -1001,9 +1012,9 @@ class LocalAppStore extends ChangeNotifier {
     final record = _ownedVerified(ownershipId, user.id);
     final handle = recipientUsername.trim().toLowerCase();
     final recipient = users.values.cast<AppUser?>().firstWhere(
-          (item) => item!.username == handle,
-          orElse: () => null,
-        );
+      (item) => item!.username == handle,
+      orElse: () => null,
+    );
     if (recipient == null) throw StoreException('Recipient not found.');
     if (recipient.id == user.id) {
       throw StoreException('Choose another member.');
@@ -1020,7 +1031,8 @@ class LocalAppStore extends ChangeNotifier {
         id: _id('note'),
         userId: recipient.id,
         title: 'Gift request',
-        body: '${user.displayName} offered a piece. Acceptance does not transfer it yet.',
+        body:
+            '${user.displayName} offered a piece. Acceptance does not transfer it yet.',
         createdAt: _clock(),
         targetType: 'gift',
         targetId: gift.id,
@@ -1033,9 +1045,9 @@ class LocalAppStore extends ChangeNotifier {
   void acceptGift(String giftId) {
     final user = _requireSession();
     final gift = gifts.cast<GiftRequest?>().firstWhere(
-          (item) => item!.id == giftId,
-          orElse: () => null,
-        );
+      (item) => item!.id == giftId,
+      orElse: () => null,
+    );
     if (gift == null || gift.toUserId != user.id) {
       throw StoreException('This gift is not addressed to you.');
     }
